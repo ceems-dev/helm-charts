@@ -1,0 +1,41 @@
+{{- if and .Values.ceemsExporter.enabled .Values.ceemsExporter.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kube-ceems.exporter.fullname" . }}
+  namespace: {{ include "kube-ceems.exporter.namespace" . }}
+  labels:
+    {{- include "kube-ceems.exporter.labels" $ | nindent 4 }}
+    {{- with .Values.ceemsExporter.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.ceemsExporter.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+{{- if .Values.ceemsExporter.service.ipDualStack.enabled }}
+  ipFamilies: {{ toYaml .Values.ceemsExporter.service.ipDualStack.ipFamilies | nindent 4 }}
+  ipFamilyPolicy: {{ .Values.ceemsExporter.service.ipDualStack.ipFamilyPolicy }}
+{{- end }}
+{{- if .Values.ceemsExporter.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.ceemsExporter.service.externalTrafficPolicy }}
+{{- end }}
+{{- if .Values.ceemsExporter.service.internalTrafficPolicy }}
+  internalTrafficPolicy: {{ .Values.ceemsExporter.service.internalTrafficPolicy }}
+{{- end }}
+  type: {{ .Values.ceemsExporter.service.type }}
+{{- if and (eq .Values.ceemsExporter.service.type "ClusterIP") .Values.ceemsExporter.service.clusterIP }}
+  clusterIP: "{{ .Values.ceemsExporter.service.clusterIP }}"
+{{- end }}
+  ports:
+    - port: {{ .Values.ceemsExporter.service.servicePort | default .Values.ceemsExporter.service.port }}
+      {{- if ( and (eq .Values.ceemsExporter.service.type "NodePort" ) (not (empty .Values.ceemsExporter.service.nodePort)) ) }}
+      nodePort: {{ .Values.ceemsExporter.service.nodePort }}
+      {{- end }}
+      targetPort: {{ .Values.ceemsExporter.service.targetPort }}
+      protocol: TCP
+      name: {{ .Values.ceemsExporter.service.portName }}
+  selector:
+    {{- include "kube-ceems.exporter.selectorLabels" . | nindent 4 }}
+{{- end }}

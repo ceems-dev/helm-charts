@@ -1,0 +1,12 @@
+{{- if .Values.redfishProxy.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "kube-ceems.redfish-proxy.fullname" . }}-config
+  namespace: {{ include "kube-ceems.redfish-proxy.namespace" . }}
+data:
+  config.yaml: |
+    redfish_config:
+      tls_config:
+        insecure_skip_verify: {{ .Values.redfishProxy.insecureSkipVerify }}
+{{- end }}

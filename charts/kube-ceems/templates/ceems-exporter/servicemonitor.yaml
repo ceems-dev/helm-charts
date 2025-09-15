@@ -1,0 +1,114 @@
+{{- if and .Values.ceemsExporter.enabled .Values.ceemsExporter.prometheus.monitor.enabled }}
+---
+apiVersion: {{ .Values.ceemsExporter.prometheus.monitor.apiVersion | default "monitoring.coreos.com/v1" }}
+kind: ServiceMonitor
+metadata:
+  name: {{ include "kube-ceems.exporter.fullname" . }}
+  namespace: {{ include "kube-ceems.exporter.monitor-namespace" . }}
+  labels:
+    {{- include "kube-ceems.exporter.labels" . | nindent 4 }}
+    {{- with .Values.ceemsExporter.prometheus.monitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  jobLabel: {{ default "app.kubernetes.io/name" .Values.ceemsExporter.prometheus.monitor.jobLabel }}
+  {{- include "servicemonitor.scrapeLimits" .Values.ceemsExporter.prometheus.monitor | nindent 2 }}
+  {{- with .Values.ceemsExporter.prometheus.monitor.podTargetLabels }}
+  podTargetLabels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.ceemsExporter.prometheus.monitor.targetLabels }}
+  targetLabels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+    {{- with .Values.ceemsExporter.prometheus.monitor.selectorOverride }}
+      {{- toYaml . | nindent 6 }}
+    {{- else }}
+      {{- include "kube-ceems.exporter.selectorLabels" . | nindent 6 }}
+    {{- end }}
+  {{- with .Values.ceemsExporter.prometheus.monitor.attachMetadata }}
+  attachMetadata:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  endpoints:
+    - port: {{ .Values.ceemsExporter.service.portName }}
+      {{- include "servicemonitor.authConfig" . | nindent 6 }}
+      {{- with .Values.ceemsExporter.prometheus.monitor.proxyUrl }}
+      proxyUrl: {{ . }}
+      {{- end }}
+      {{- with .Values.ceemsExporter.prometheus.monitor.interval }}
+      interval: {{ . }}
+      {{- end }}
+      {{- with .Values.ceemsExporter.prometheus.monitor.scrapeTimeout }}
+      scrapeTimeout: {{ . }}
+      {{- end }}
+      {{- with .Values.ceemsExporter.prometheus.monitor.honorTimestamps }}
+      honorTimestamps: {{ . }}
+      {{- end }}
+      {{- with .Values.ceemsExporter.prometheus.monitor.honorLabels }}
+      honorLabels: {{ . }}
+      {{- end }}
+      {{- with .Values.ceemsExporter.prometheus.monitor.relabelings }}
+      relabelings:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ceemsExporter.prometheus.monitor.metricRelabelings }}
+      metricRelabelings:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      enableHttp2: {{ default false .Values.ceemsExporter.prometheus.monitor.enableHttp2 }}
+      filterRunning: {{ default true .Values.ceemsExporter.prometheus.monitor.filterRunning }}
+      followRedirects: {{ default false .Values.ceemsExporter.prometheus.monitor.followRedirects }}
+      {{- with .Values.ceemsExporter.prometheus.monitor.params }}
+      params:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- if .Values.ceemsExporter.prometheus.monitor.dcgmExporterEnabled }}
+---
+apiVersion: {{ .Values.ceemsExporter.prometheus.monitor.apiVersion | default "monitoring.coreos.com/v1" }}
+kind: ServiceMonitor
+metadata:
+  name: {{ include "kube-ceems.exporter.fullname" . }}-nvidia-dcgm-exporter
+  namespace: {{ include "kube-ceems.exporter.monitor-namespace" . }}
+  labels:
+    {{- include "kube-ceems.exporter.labels" . | nindent 4 }}
+    {{- with .Values.ceemsExporter.prometheus.monitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  endpoints:
+  - path: /metrics
+    port: gpu-metrics
+  jobLabel: app.kubernetes.io/name
+  selector:
+    matchLabels:
+      app: nvidia-dcgm-exporter
+  namespaceSelector:
+    any: true
+{{- end }}
+{{- if .Values.ceemsExporter.prometheus.monitor.amdDeviceMetricsExporterEnabled }}
+---
+apiVersion: {{ .Values.ceemsExporter.prometheus.monitor.apiVersion | default "monitoring.coreos.com/v1" }}
+kind: ServiceMonitor
+metadata:
+  name: {{ include "kube-ceems.exporter.fullname" . }}-amd-device-metrics-exporter
+  namespace: {{ include "kube-ceems.exporter.monitor-namespace" . }}
+  labels:
+    {{- include "kube-ceems.exporter.labels" . | nindent 4 }}
+    {{- with .Values.ceemsExporter.prometheus.monitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  endpoints:
+  - path: /metrics
+    port: exporter-port
+  jobLabel: app.kubernetes.io/name
+  selector:
+    matchLabels:
+      app.kubernetes.io/service: default-metrics-exporter
+  namespaceSelector:
+    any: true
+{{- end }}
+{{- end }}

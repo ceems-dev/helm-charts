@@ -1,0 +1,10 @@
+{{- if .Values.ceemsExporter.enabled }}
+{{- with (include "kube-ceems.exporter.service-monitor-secret" .) }}
+---
+{{ tpl . $ }}
+{{- end }}
+{{ range .Values.ceemsExporter.extraManifests }}
+---
+{{ tpl . $ }}
+{{ end }}
+{{- end }}

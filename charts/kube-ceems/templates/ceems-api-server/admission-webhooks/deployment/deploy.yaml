@@ -1,0 +1,142 @@
+{{- if and .Values.ceemsAPIServer.enabled .Values.ceemsAPIServer.admissionWebhooks.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "kube-ceems.fullname" . }}-admission-controller
+  namespace: {{ template "kube-ceems.namespace" . }}
+  labels:
+    app: {{ template "kube-ceems.name" . }}-admission-controller
+    {{- include "kube-ceems.admission.controller.labels" . | nindent 4 }}
+{{- if .Values.ceemsAPIServer.admissionWebhooks.deployment.labels }}
+{{ toYaml .Values.ceemsAPIServer.admissionWebhooks.deployment.labels | indent 4 }}
+{{- end }}
+{{- if .Values.ceemsAPIServer.admissionWebhooks.deployment.annotations }}
+  annotations:
+{{ toYaml .Values.ceemsAPIServer.admissionWebhooks.deployment.annotations | indent 4 }}
+{{- end }}
+spec:
+  replicas: {{ .Values.ceemsAPIServer.admissionWebhooks.deployment.replicas }}
+  revisionHistoryLimit: {{ .Values.ceemsAPIServer.admissionWebhooks.deployment.revisionHistoryLimit }}
+  {{- with .Values.ceemsAPIServer.admissionWebhooks.deployment.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: {{ template "kube-ceems.name" . }}-admission-controller
+      release: {{ $.Release.Name | quote }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "kube-ceems.name" . }}-admission-controller
+        {{- include "kube-ceems.admission.controller.labels" . | nindent 8 }}
+{{- if .Values.ceemsAPIServer.admissionWebhooks.deployment.podLabels }}
+{{ toYaml .Values.ceemsAPIServer.admissionWebhooks.deployment.podLabels | indent 8 }}
+{{- end }}
+{{- if .Values.ceemsAPIServer.admissionWebhooks.deployment.podAnnotations }}
+      annotations:
+{{ toYaml .Values.ceemsAPIServer.admissionWebhooks.deployment.podAnnotations | indent 8 }}
+{{- end }}
+    spec:
+    {{- if .Values.ceemsAPIServer.admissionWebhooks.deployment.priorityClassName }}
+      priorityClassName: {{ .Values.ceemsAPIServer.admissionWebhooks.deployment.priorityClassName }}
+    {{- end }}
+    {{- if .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+      {{- include "kube-ceems.imagePullSecrets" . | indent 8 }}
+    {{- end }}
+      containers:
+        - name: ceems-admission-controller
+          image: {{ include "kube-ceems.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/ceems_k8s_admission_controller
+          args:
+            - --web.listen-address=0.0.0.0:9000
+            - --web.config.file=/etc/ceems_k8s_admission_controller/web-config.yaml
+            {{- range $_, $arg := .Values.ceemsAPIServer.admissionWebhooks.deployment.additionalArgs }}
+            {{- if (hasKey $arg "value") }}
+            - --{{ $arg.name }}={{ $arg.value }}
+            {{- else }}
+            - --{{ $arg.name }}
+            {{- end }}
+            {{- end }}
+          ports:
+            - containerPort: 9000
+              name: https
+          {{- if .Values.ceemsAPIServer.admissionWebhooks.deployment.livenessProbe.enabled }}
+          livenessProbe:
+            failureThreshold: {{ .Values.ceemsAPIServer.admissionWebhooks.deployment.livenessProbe.failureThreshold }}
+            exec:
+              command:
+                - /bin/liveness-probe.sh
+                - -a
+                - ceems_k8s_admission_controller
+                - -p
+                - "9000"
+            initialDelaySeconds: {{ .Values.ceemsAPIServer.admissionWebhooks.deployment.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.ceemsAPIServer.admissionWebhooks.deployment.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.ceemsAPIServer.admissionWebhooks.deployment.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.ceemsAPIServer.admissionWebhooks.deployment.livenessProbe.timeoutSeconds }}
+          {{- end }}
+          {{- if .Values.ceemsAPIServer.admissionWebhooks.deployment.livenessProbe.enabled }}
+          readinessProbe:
+            failureThreshold: {{ .Values.ceemsAPIServer.admissionWebhooks.deployment.readinessProbe.failureThreshold }}
+            exec:
+              command:
+                - /bin/liveness-probe.sh
+                - -a
+                - ceems_k8s_admission_controller
+                - -p
+                - "9000"
+            initialDelaySeconds: {{ .Values.ceemsAPIServer.admissionWebhooks.deployment.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.ceemsAPIServer.admissionWebhooks.deployment.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.ceemsAPIServer.admissionWebhooks.deployment.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.ceemsAPIServer.admissionWebhooks.deployment.readinessProbe.timeoutSeconds }}
+          {{- end }}
+          resources:
+{{ toYaml .Values.ceemsAPIServer.admissionWebhooks.deployment.resources | indent 12 }}
+          securityContext:
+{{ toYaml .Values.ceemsAPIServer.admissionWebhooks.deployment.containerSecurityContext | indent 12 }}
+          volumeMounts:
+            - name: web-config
+              mountPath: /etc/ceems_k8s_admission_controller
+              readOnly: true
+            - name: tls-secret
+              mountPath: /certs
+              readOnly: true
+      volumes:
+        - name: web-config
+          configMap:
+            name: {{ template "kube-ceems.fullname" . }}-admission-controller-web-config
+        - name: tls-secret
+          secret:
+            defaultMode: 420
+            secretName: {{ template "kube-ceems.fullname" . }}-admission-controller-certs
+    {{- with .Values.ceemsAPIServer.admissionWebhooks.deployment.dnsConfig }}
+      dnsConfig:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+{{- if .Values.ceemsAPIServer.admissionWebhooks.deployment.securityContext }}
+      securityContext:
+{{ toYaml .Values.ceemsAPIServer.admissionWebhooks.deployment.securityContext | indent 8 }}
+{{- end }}
+      serviceAccountName: {{ template "kube-ceems.admission.controller.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.ceemsAPIServer.admissionWebhooks.deployment.automountServiceAccountToken }}
+{{- if .Values.ceemsAPIServer.admissionWebhooks.deployment.hostNetwork }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+{{- end }}
+    {{- with .Values.ceemsAPIServer.admissionWebhooks.deployment.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.ceemsAPIServer.admissionWebhooks.deployment.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.ceemsAPIServer.admissionWebhooks.deployment.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+{{- end }}

@@ -1,0 +1,24 @@
+{{- if and .Values.redfishProxy.rbac.create .Values.redfishProxy.enabled }}
+{{- if or .Values.redfishProxy.kubeRBACProxy.enabled (gt (len .Values.redfishProxy.rbac.extraClusterRoleRules) 0) }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "kube-ceems.redfish-proxy.fullname" . }}
+  labels:
+    {{- include "kube-ceems.redfish-proxy.labels" . | nindent 4 }}
+rules:
+{{- if .Values.redfishProxy.kubeRBACProxy.enabled }}
+  - apiGroups: [ "authentication.k8s.io" ]
+    resources:
+      - tokenreviews
+    verbs: [ "create" ]
+  - apiGroups: [ "authorization.k8s.io" ]
+    resources:
+      - subjectaccessreviews
+    verbs: [ "create" ]
+{{- end }}
+{{- with .Values.redfishProxy.rbac.extraClusterRoleRules }}
+  {{- tpl (toYaml .) $ | nindent 2 }}
+{{- end }}
+{{- end }}
+{{- end }}

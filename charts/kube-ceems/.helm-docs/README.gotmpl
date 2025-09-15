@@ -1,0 +1,173 @@
+{{ template "chart.header" . }}
+
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.homepageLine" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+## Description
+
+Installs core components of the [CEEMS](https://ceems-dev.github.io/ceems/docs/), a collection of Kubernetes manifests,
+Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end
+Kubernetes cluster energy and emissions monitoring with Prometheus and Grafana.
+
+## Prerequisites
+
+* Kubernetes 1.19+
+* Helm 3+
+
+## Usage
+
+The chart is distributed as an [OCI Artifact](https://helm.sh/docs/topics/registries/) as well as via a
+traditional [Helm Repository](https://helm.sh/docs/topics/chart_repository/).
+
+* OCI Artifact: `oci://ghcr.io/ceems-dev/charts/kube-ceems`
+* Helm Repository: `https://ceems-dev.github.io/helm-charts` with chart `kube-ceems`
+
+The installation instructions use the OCI registry. Refer to the [`helm repo`](https://helm.sh/docs/helm/helm_repo/)
+command documentation for information on installing charts via the traditional repository.
+
+### Install Helm Chart
+
+```console
+helm install -n ceems --create-namespace ceems oci://ghcr.io/ceems-dev/charts/kube-ceems
+```
+
+_See [configuration](#configuration) below._
+
+_See [helm install](https://helm.sh/docs/helm/helm_install/) for command documentation._
+
+### Dependencies
+
+By default this chart installs additional, dependent charts:
+
+* [prometheus-community/kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
+* [grafana/pyroscope](https://github.com/grafana/helm-charts/tree/main/charts/grafana)
+
+To disable dependencies during installation, see [multiple releases](#multiple-releases) below.
+
+_See [helm dependency](https://helm.sh/docs/helm/helm_dependency/) for command documentation._
+
+### Uninstall Helm Chart
+
+```console
+helm uninstall ceems
+```
+
+This removes all the Kubernetes components associated with the chart and deletes the release.
+
+_See [helm uninstall](https://helm.sh/docs/helm/helm_uninstall/) for command documentation._
+
+### Upgrading Chart
+
+```console
+helm upgrade -n ceems ceems
+```
+
+With Helm v3, CRDs created by this chart's dependencies are not updated by default and should be manually updated.
+Consult also the [Helm Documentation on CRDs](https://helm.sh/docs/chart_best_practices/custom_resource_definitions).
+
+_See [helm upgrade](https://helm.sh/docs/helm/helm_upgrade/) for command documentation._
+
+## Configuration
+
+See [Customizing the Chart Before Installing](https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing).
+To see all configurable options with detailed comments:
+
+```console
+helm show values oci://ghcr.io/ceems-dev/charts/kube-ceems
+```
+
+You may also `helm show values` on this chart's [dependencies](#dependencies) for additional options.
+
+## Multiple releases
+
+The same chart can be used to run multiple CEEMS instances in the same cluster if required. This makes sense when one control
+plane cluster is managing different workload clusters. To achieve this, it is necessary to run only one instance of Admission Webhook of
+CEEMS API server (`ceemsAPIServer.admissionWebhooks.enabled`) and one instance of prometheus-operator
+(`kube-prometheus-stack.prometheusOperator.enabled`) from
+[kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack). These two
+resources have cluster wide scope and having multiple running instances might have undesired effect.
+
+{{ define "chart.valueDefaultColumnRender" }}
+{{- $defaultValue := (default .Default .AutoDefault)  -}}
+{{- $notationType := .NotationType }}
+{{- if (and (hasPrefix "`" $defaultValue) (hasSuffix "`" $defaultValue) ) -}}
+{{- $defaultValue = (toPrettyJson (fromJson (trimAll "`" (default .Default .AutoDefault) ) ) ) -}}
+{{- $notationType = "json" }}
+{{- end -}}
+{{- if (eq $notationType "tpl" ) }}
+<pre lang="{{ $notationType }}">
+{{ .Key }}: |
+{{- $defaultValue | nindent 2 }}
+</pre>
+{{- else if (eq $notationType "email") }}
+<a href="mailto:{{ $defaultValue }}" style="color: green;">"{{ $defaultValue }}"</a>
+{{- else }}
+<pre lang="{{ $notationType }}">
+{{ $defaultValue }}
+</pre>
+{{- end }}
+{{ end }}
+
+{{ define "chart.typeColumnRender" }}
+{{- if (eq .Type "string/email") }}
+<a href="#stringemail" title="{{- template "chart.valuetypes.email" -}}">{{.Type}}</a>
+{{- else if (eq .Type "k8s/storage/persistent-volume/access-modes" )}}
+<a target="_blank" 
+   href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes"
+   >{{- .Type }}</a>
+{{- else }}
+{{ .Type }}
+{{- end }}
+{{ end }}
+
+{{ define "chart.descriptionColumnRender" }}
+{{- $description := "" }}
+{{- if .Description }}
+{{- $description = .Description }}
+{{- else }}
+{{- $description = .AutoDescription }}
+{{- end }}
+{{- $description = regexReplaceAll `\[(.*)\]\((.*)\)` $description `<a target="_blank" href="${2}">${1}</a>` }}
+{{- $description = regexReplaceAll "`([a-zA-Z0-9]+?)`" $description `<code>${1}</code>` }}
+{{ $description }}
+{{ end }}
+
+{{ define "chart.valuesTableHtml" }}
+<table>
+	<thead>
+		<th style="width:10px;">Key</th>
+		<th>Type</th>
+		<th>Default</th>
+		<th>Description</th>
+	</thead>
+	<tbody>
+	{{- range .Values }}
+		<tr>
+			<td id="{{ .Key | replace "." "--" }}">
+              <div style="max-width: 250px;"><a href="./values.yaml#L{{ .LineNumber }}">{{ .Key }}</a></div>
+            </td>
+            <td>{{- template "chart.typeColumnRender" . -}}</td>
+			<td>
+				<div style="max-width: 250px;">{{ template "chart.valueDefaultColumnRender" . }}</div>
+			</td>
+			<td>{{ template "chart.descriptionColumnRender" . }}</td>
+		</tr>
+	{{- end }}
+	</tbody>
+</table>
+{{ end }}
+
+{{ template "chart.valuesSectionHtml" . }}
+
+{{ template "helm-docs.versionFooter" . }} 
