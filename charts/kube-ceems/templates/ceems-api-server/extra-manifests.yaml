@@ -1,6 +1,0 @@
-{{- if .Values.ceemsAPIServer.enabled }}
-{{ range .Values.ceemsAPIServer.extraManifests }}
----
-{{ tpl . $ }}
-{{ end }}
-{{- end }}

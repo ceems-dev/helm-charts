@@ -1,6 +1,0 @@
-{{- if .Values.ceemsLB.enabled }}
-{{ range .Values.ceemsLB.extraManifests }}
----
-{{ tpl . $ }}
-{{ end }}
-{{- end }}
