@@ -1,0 +1,39 @@
+{{- if and .Values.ceemsAPIServer.enabled .Values.ceemsAPIServer.persistence.enabled (not .Values.ceemsAPIServer.persistence.existingClaim) (eq .Values.ceemsAPIServer.persistence.type "pvc")}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "kube-ceems.api-server.fullname" . }}
+  namespace: {{ include "kube-ceems.api-server.namespace" . }}
+  labels:
+    {{- include "kube-ceems.api-server.labels" . | nindent 4 }}
+    {{- with .Values.ceemsAPIServer.persistence.extraPvcLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.ceemsAPIServer.persistence.annotations  }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.ceemsAPIServer.persistence.finalizers  }}
+  finalizers:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    {{- range .Values.ceemsAPIServer.persistence.accessModes }}
+    - {{ . | quote }}
+    {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.ceemsAPIServer.persistence.size | quote }}
+  {{- if and (.Values.ceemsAPIServer.persistence.lookupVolumeName) (lookup "v1" "PersistentVolumeClaim" (include "kube-ceems.api-server.namespace" .) (include "kube-ceems.api-server.fullname" .)) }}
+  volumeName: {{ (lookup "v1" "PersistentVolumeClaim" (include "kube-ceems.api-server.namespace" .) (include "kube-ceems.api-server.fullname" .)).spec.volumeName }}
+  {{- end }}
+  {{- with .Values.ceemsAPIServer.persistence.storageClassName }}
+  storageClassName: {{ . }}
+  {{- end }}
+  {{- with .Values.ceemsAPIServer.persistence.selectorLabels }}
+  selector:
+    matchLabels:
+    {{- toYaml . | nindent 6 }}
+  {{- end }}
+{{- end }}

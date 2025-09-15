@@ -1,0 +1,43 @@
+{{- if and .Values.ceemsAPIServer.enabled .Values.ceemsAPIServer.admissionWebhooks.enabled }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name:  {{ template "kube-ceems.admission.fullname" . }}
+  annotations:
+    {{- with .Values.ceemsAPIServer.admissionWebhooks.mutatingWebhookConfiguration.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  labels:
+    {{- include "kube-ceems.admission.webhook.labels" $ | nindent 4 }}
+webhooks:
+  - name: mutate.ceems.io
+    failurePolicy: Ignore
+    rules:
+      - apiGroups:
+          - "*"
+        apiVersions:
+          - "*"
+        resources:
+          - pods
+          - deployments
+          - statefulsets
+          - daemonsets
+          - jobs
+          - cronjobs
+        operations:
+          - CREATE
+          - UPDATE
+    clientConfig:
+      service:
+        namespace: {{ template "kube-ceems.namespace" . }}
+        name: {{ template "kube-ceems.fullname" $ }}-admission-controller
+        path: /ceems-admission-controller/mutate
+      {{- if and .Values.ceemsAPIServer.admissionWebhooks.caBundle (not .Values.ceemsAPIServer.admissionWebhooks.patch.enabled) }}
+      caBundle: {{ .Values.ceemsAPIServer.admissionWebhooks.caBundle }}
+      {{- end }}
+    timeoutSeconds: {{ .Values.ceemsAPIServer.admissionWebhooks.timeoutSeconds }}
+    admissionReviewVersions:
+      - v1
+      - v1beta1
+    sideEffects: None
+{{- end }}

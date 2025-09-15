@@ -1,0 +1,6 @@
+{{- if .Values.pyroscope.ingress.enabled }}
+{{ range .Values.pyroscope.ingress.extraManifests }}
+---
+{{ tpl . $ }}
+{{ end }}
+{{- end }}

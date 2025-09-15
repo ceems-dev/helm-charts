@@ -1,0 +1,405 @@
+{{- if .Values.ceemsLB.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kube-ceems.lb.fullname" . }}
+  namespace: {{ include "kube-ceems.lb.namespace" . }}
+  labels:
+    {{- include "kube-ceems.lb.labels" . | nindent 4 }}
+  {{- with .Values.ceemsLB.deployAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "kube-ceems.lb.selectorLabels" . | nindent 6 }}
+  revisionHistoryLimit: {{ .Values.ceemsLB.revisionHistoryLimit }}
+  {{- with .Values.ceemsLB.updateStrategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      {{- with .Values.ceemsLB.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "kube-ceems.lb.labels" . | nindent 8 }}
+        {{- with .Values.ceemsLB.podLabels }}
+        {{- tpl (toYaml .) $ | nindent 8 }}
+        {{- end }}
+    spec:
+      automountServiceAccountToken: {{ ternary true false (or .Values.ceemsLB.serviceAccount.automountServiceAccountToken .Values.ceemsLB.kubeRBACProxy.enabled) }}
+      {{- with .Values.ceemsLB.securityContext }}
+      securityContext: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ceemsLB.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      {{- with .Values.ceemsLB.extraInitContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "kube-ceems.lb.serviceAccountName" . }}
+      {{- with .Values.ceemsLB.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ . }}
+      {{- end }}
+      containers:
+        {{- $servicePortTSDB := ternary .Values.ceemsLB.kubeRBACProxy.port .Values.ceemsLB.service.port .Values.ceemsLB.kubeRBACProxy.enabled }}
+        {{- $servicePortPyro := add $servicePortTSDB 10 }}
+        - name: lb
+          image: {{ include "kube-ceems.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/ceems_lb
+          args:
+            - --web.listen-address=[$(HOST_IP)]:{{ $servicePortTSDB }}
+            {{- if (contains "pyroscope" (include "kube-ceems.lb.backend-types" .)) }}
+            - --web.listen-address=[$(HOST_IP)]:{{ $servicePortPyro }}
+            {{- end }}
+            - --config.file=/etc/ceems-lb/config.yaml
+            {{- if not (empty .Values.ceemsLB.webConfig) }}
+            - --web.config.file=/etc/ceems-web/config.yaml
+            {{- end }}
+            {{- range $_, $arg := .Values.ceemsLB.additionalArgs }}
+            {{- if (hasKey $arg "value") }}
+            - --{{ $arg.name }}={{ $arg.value }}
+            {{- else }}
+            - --{{ $arg.name }}
+            {{- end }}
+            {{- end }}
+          {{- with .Values.ceemsLB.containerSecurityContext }}
+          securityContext: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: HOST_IP
+              {{- if .Values.ceemsLB.kubeRBACProxy.enabled }}
+              value: 127.0.0.1
+              {{- else if .Values.ceemsLB.service.listenOnAllInterfaces }}
+              value: 0.0.0.0
+              {{- else }}
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.hostIP
+              {{- end }}
+            {{- range $key, $value := .Values.ceemsLB.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- if eq .Values.ceemsLB.kubeRBACProxy.enabled false }}
+          ports:
+            - name: {{ printf "%s-tsdb" .Values.ceemsLB.service.portName | trunc 14 }}
+              containerPort: {{ .Values.ceemsLB.service.port }}
+              protocol: TCP
+            {{- if (contains "pyroscope" (include "kube-ceems.lb.backend-types" .)) }}
+            - name: {{ printf "%s-pyroscope" .Values.ceemsLB.service.portName | trunc 14 }}
+              containerPort: {{ add .Values.ceemsLB.service.port 10 }}
+              protocol: TCP
+            {{- end }}
+          {{- end }}
+          livenessProbe:
+            failureThreshold: {{ .Values.ceemsLB.livenessProbe.failureThreshold }}
+            exec:
+              command:
+                - /bin/liveness-probe.sh
+                - -a
+                - ceems_lb
+            initialDelaySeconds: {{ .Values.ceemsLB.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.ceemsLB.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.ceemsLB.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.ceemsLB.livenessProbe.timeoutSeconds }}
+          readinessProbe:
+            failureThreshold: {{ .Values.ceemsLB.readinessProbe.failureThreshold }}
+            exec:
+              command:
+                - /bin/liveness-probe.sh
+                - -a
+                - ceems_lb
+            initialDelaySeconds: {{ .Values.ceemsLB.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.ceemsLB.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.ceemsLB.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.ceemsLB.readinessProbe.timeoutSeconds }}
+          {{- with .Values.ceemsLB.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.ceemsLB.terminationMessageParams.enabled }}
+          {{- with .Values.ceemsLB.terminationMessageParams }}
+          terminationMessagePath: {{ .terminationMessagePath }}
+          terminationMessagePolicy: {{ .terminationMessagePolicy }}
+          {{- end }}
+          {{- end }}
+          volumeMounts:
+            - name: ceems-lb-config
+              mountPath: /etc/ceems-lb
+            {{- if not (empty .Values.ceemsLB.webConfig) }}
+            - name: ceems-lb-web-config
+              mountPath: /etc/ceems-web
+            {{- end }}
+            {{- if ne .Values.ceemsLB.ceemsAPIServer.persistenceVolumeClaim "" }}
+            - name: ceems-db
+              mountPath: /var/lib/ceems_api_server
+            {{- end }}
+            {{- range $_, $mount := .Values.ceemsLB.extraHostVolumeMounts }}
+            - name: {{ $mount.name }}
+              mountPath: {{ $mount.mountPath }}
+              readOnly: {{ $mount.readOnly }}
+              {{- with $mount.mountPropagation }}
+              mountPropagation: {{ . }}
+              {{- end -}}
+            {{- end -}}
+            {{- range $_, $mount := .Values.ceemsLB.configmaps }}
+            - name: {{ tpl $mount.name $ | quote}}
+              mountPath: {{ $mount.mountPath }}
+            {{- end }}
+            {{- range $_, $mount := .Values.ceemsLB.secrets }}
+            - name: {{ tpl $mount.name $ | quote }}
+              mountPath: {{ $mount.mountPath }}
+            {{- end }}
+            {{- with .Values.ceemsLB.extraVolumeMounts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+        {{-  if .Values.ceemsLB.kubeRBACProxy.enabled  }}
+        - name: kube-rbac-proxy-tsdb
+          args:
+            {{- range $_, $arg := .Values.ceemsLB.kubeRBACProxy.additionalArgs }}
+            {{- if (hasKey $arg "value") }}
+            - --{{ $arg.name }}={{ $arg.value }}
+            {{- else }}
+            - --{{ $arg.name }}
+            {{- end }}
+            {{- end }}
+            - --secure-listen-address=:{{ .Values.ceemsLB.service.port}}
+            - --upstream=http://127.0.0.1:{{ $servicePortTSDB }}/
+            - --proxy-endpoints-port={{ .Values.ceemsLB.kubeRBACProxy.proxyEndpointsPort }}
+            - --config-file=/etc/kube-rbac-proxy-config/config-file.yaml
+            {{- if and .Values.ceemsLB.kubeRBACProxy.tls.enabled .Values.ceemsLB.tlsSecret.enabled }}
+            - --tls-cert-file=/tls/private/{{ .Values.ceemsLB.tlsSecret.certItem }}
+            - --tls-private-key-file=/tls/private/{{ .Values.ceemsLB.tlsSecret.keyItem }}
+            {{- if and .Values.ceemsLB.kubeRBACProxy.tls.tlsClientAuth .Values.ceemsLB.tlsSecret.caItem }}
+            - --client-ca-file=/tls/private/{{ .Values.ceemsLB.tlsSecret.caItem }}
+            {{- end }}
+            {{- end }}
+          volumeMounts:
+            - name: kube-rbac-proxy-config
+              mountPath: /etc/kube-rbac-proxy-config
+            {{- if and .Values.ceemsLB.kubeRBACProxy.tls.enabled .Values.ceemsLB.tlsSecret.enabled }}
+            - name: {{ tpl .Values.ceemsLB.tlsSecret.volumeName . | quote }}
+              mountPath: /tls/private
+              readOnly: true
+            {{- end }}
+            {{- with .Values.ceemsLB.kubeRBACProxy.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          imagePullPolicy: {{ .Values.ceemsLB.kubeRBACProxy.image.pullPolicy }}
+          {{- if .Values.ceemsLB.kubeRBACProxy.image.sha }}
+          image: "{{ .Values.ceemsLB.imageRegistry | default .Values.ceemsLB.kubeRBACProxy.image.registry}}/{{ .Values.ceemsLB.kubeRBACProxy.image.repository }}:{{ .Values.ceemsLB.kubeRBACProxy.image.tag }}@sha256:{{ .Values.ceemsLB.kubeRBACProxy.image.sha }}"
+          {{- else }}
+          image: "{{ .Values.ceemsLB.imageRegistry | default .Values.ceemsLB.kubeRBACProxy.image.registry}}/{{ .Values.ceemsLB.kubeRBACProxy.image.repository }}:{{ .Values.ceemsLB.kubeRBACProxy.image.tag }}"
+          {{- end }}
+          ports:
+            - containerPort: {{ .Values.ceemsLB.service.port }}
+              name: {{ printf "%s-tsdb" .Values.ceemsLB.kubeRBACProxy.portName | trunc 14 }}
+              {{- if .Values.ceemsLB.kubeRBACProxy.enableHostPort }}
+              hostPort: {{ .Values.ceemsLB.service.port }}
+              {{- end }}
+            - containerPort: {{ .Values.ceemsLB.kubeRBACProxy.proxyEndpointsPort }}
+              {{- if .Values.ceemsLB.kubeRBACProxy.enableProxyEndpointsHostPort }}
+              hostPort: {{ .Values.ceemsLB.kubeRBACProxy.proxyEndpointsPort }}
+              {{- end }}
+              name: {{ trunc 14 "http-healthz-tsbd" }}
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              port: {{ .Values.ceemsLB.kubeRBACProxy.proxyEndpointsPort }}
+              path: healthz
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+          {{- if .Values.ceemsLB.kubeRBACProxy.resources }}
+          resources:
+          {{- toYaml .Values.ceemsLB.kubeRBACProxy.resources | nindent 12 }}
+          {{- end }}
+          {{- if .Values.ceemsLB.terminationMessageParams.enabled }}
+          {{- with .Values.ceemsLB.terminationMessageParams }}
+          terminationMessagePath: {{ .terminationMessagePath }}
+          terminationMessagePolicy: {{ .terminationMessagePolicy }}
+          {{- end }}
+          {{- end }}
+          {{- with .Values.ceemsLB.kubeRBACProxy.env }}
+          env:
+            {{- range $key, $value := $.Values.ceemsLB.kubeRBACProxy.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.ceemsLB.kubeRBACProxy.containerSecurityContext }}
+          securityContext:
+          {{- toYaml .Values.ceemsLB.kubeRBACProxy.containerSecurityContext | nindent 12 }}
+          {{- end }}
+        {{- if (contains "pyroscope" (include "kube-ceems.lb.backend-types" .)) }}
+        {{- $servicePort := add .Values.ceemsLB.service.port 10 }}
+        {{- $proxyPort := add .Values.ceemsLB.kubeRBACProxy.proxyEndpointsPort 10 }}
+        - name: kube-rbac-proxy-pyroscope
+          args:
+            {{-  if .Values.ceemsLB.kubeRBACProxy.extraArgs  }}
+            {{- .Values.ceemsLB.kubeRBACProxy.extraArgs | toYaml | nindent 12 }}
+            {{-  end  }}
+            - --secure-listen-address=:{{ $servicePort }}
+            - --upstream=http://127.0.0.1:{{ $servicePortPyro }}/
+            - --proxy-endpoints-port={{ $proxyPort }}
+            - --config-file=/etc/kube-rbac-proxy-config/config-file.yaml
+            {{- if and .Values.ceemsLB.kubeRBACProxy.tls.enabled .Values.ceemsLB.tlsSecret.enabled }}
+            - --tls-cert-file=/tls/private/{{ .Values.ceemsLB.tlsSecret.certItem }}
+            - --tls-private-key-file=/tls/private/{{ .Values.ceemsLB.tlsSecret.keyItem }}
+            {{- if and .Values.ceemsLB.kubeRBACProxy.tls.tlsClientAuth .Values.ceemsLB.tlsSecret.caItem }}
+            - --client-ca-file=/tls/private/{{ .Values.ceemsLB.tlsSecret.caItem }}
+            {{- end }}
+            {{- end }}
+          volumeMounts:
+            - name: kube-rbac-proxy-config
+              mountPath: /etc/kube-rbac-proxy-config
+            {{- if and .Values.ceemsLB.kubeRBACProxy.tls.enabled .Values.ceemsLB.tlsSecret.enabled }}
+            - name: {{ tpl .Values.ceemsLB.tlsSecret.volumeName . | quote }}
+              mountPath: /tls/private
+              readOnly: true
+            {{- end }}
+            {{- with .Values.ceemsLB.kubeRBACProxy.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          imagePullPolicy: {{ .Values.ceemsLB.kubeRBACProxy.image.pullPolicy }}
+          {{- if .Values.ceemsLB.kubeRBACProxy.image.sha }}
+          image: "{{ .Values.ceemsLB.imageRegistry | default .Values.ceemsLB.kubeRBACProxy.image.registry}}/{{ .Values.ceemsLB.kubeRBACProxy.image.repository }}:{{ .Values.ceemsLB.kubeRBACProxy.image.tag }}@sha256:{{ .Values.ceemsLB.kubeRBACProxy.image.sha }}"
+          {{- else }}
+          image: "{{ .Values.ceemsLB.imageRegistry | default .Values.ceemsLB.kubeRBACProxy.image.registry}}/{{ .Values.ceemsLB.kubeRBACProxy.image.repository }}:{{ .Values.ceemsLB.kubeRBACProxy.image.tag }}"
+          {{- end }}
+          ports:
+            - containerPort: {{ $servicePort }}
+              name: {{ printf "%s-pyroscope" .Values.ceemsLB.kubeRBACProxy.portName | trunc 14 }}
+              {{- if .Values.ceemsLB.kubeRBACProxy.enableHostPort }}
+              hostPort: {{ $servicePort }}
+              {{- end }}
+            - containerPort: {{ $proxyPort }}
+              {{- if .Values.ceemsLB.kubeRBACProxy.enableProxyEndpointsHostPort }}
+              hostPort: {{ $proxyPort }}
+              {{- end }}
+              name: {{ trunc 14 "http-healthz-pyroscope" }}
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              port: {{ $proxyPort }}
+              path: healthz
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+          {{- if .Values.ceemsLB.kubeRBACProxy.resources }}
+          resources:
+          {{- toYaml .Values.ceemsLB.kubeRBACProxy.resources | nindent 12 }}
+          {{- end }}
+          {{- if .Values.ceemsLB.terminationMessageParams.enabled }}
+          {{- with .Values.ceemsLB.terminationMessageParams }}
+          terminationMessagePath: {{ .terminationMessagePath }}
+          terminationMessagePolicy: {{ .terminationMessagePolicy }}
+          {{- end }}
+          {{- end }}
+          {{- with .Values.ceemsLB.kubeRBACProxy.env }}
+          env:
+            {{- range $key, $value := $.Values.ceemsLB.kubeRBACProxy.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.ceemsLB.kubeRBACProxy.containerSecurityContext }}
+          securityContext:
+          {{ toYaml .Values.ceemsLB.kubeRBACProxy.containerSecurityContext | nindent 12 }}
+          {{- end }}
+        {{- end }}
+        {{- end }}
+      {{- if or .Values.ceemsLB.imagePullSecrets .Values.ceemsLB.imagePullSecrets }}
+      imagePullSecrets:
+        {{- include "kube-ceems.imagePullSecrets" (dict "Values" .Values.ceemsLB "imagePullSecrets" .Values.ceemsLB.imagePullSecrets) | indent 8 }}
+      {{- end }}
+      {{- with .Values.ceemsLB.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ceemsLB.dnsConfig }}
+      dnsConfig:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ceemsLB.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ceemsLB.restartPolicy }}
+      restartPolicy: {{ . }}
+      {{- end }}
+      {{- with .Values.ceemsLB.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: ceems-lb-config
+          secret:
+            secretName: {{ template "kube-ceems.lb.fullname" . }}-config
+        {{- if not (empty .Values.ceemsLB.webConfig) }}
+        - name: ceems-lb-web-config
+          secret:
+            secretName: {{ template "kube-ceems.lb.fullname" . }}-web-config
+        {{- end }}
+        {{- if ne .Values.ceemsLB.ceemsAPIServer.persistenceVolumeClaim "" }}
+        - name: ceems-db
+          persistentVolumeClaim:
+            claimName: {{ tpl .Values.ceemsLB.ceemsAPIServer.persistenceVolumeClaim . }}
+            readOnly: true
+        {{- end }}
+        {{- range $_, $mount := .Values.ceemsLB.extraHostVolumeMounts }}
+        - name: {{ $mount.name }}
+          hostPath:
+            path: {{ $mount.hostPath }}
+            {{- with $mount.type }}
+            type: {{ . }}
+            {{- end }}
+        {{- end -}}
+        {{- range $_, $mount := .Values.ceemsLB.configmaps }}
+        - name: {{ tpl $mount.name $ | quote }}
+          configMap:
+            name: {{ tpl $mount.name $ | quote }}
+        {{- end }}
+        {{- range $_, $mount := .Values.ceemsLB.secrets }}
+        - name: {{ tpl $mount.name $ | quote }}
+          secret:
+            secretName: {{ tpl $mount.name $ | quote }}
+        {{- end }}
+        {{- if .Values.ceemsLB.kubeRBACProxy.enabled }}
+        - name: kube-rbac-proxy-config
+          configMap:
+            name: {{ template "kube-ceems.lb.fullname" . }}-rbac-config
+        {{- end }}
+        {{- if .Values.ceemsLB.tlsSecret.enabled }}
+        - name: {{ tpl .Values.ceemsLB.tlsSecret.volumeName . | quote }}
+          secret:
+            secretName: {{ tpl .Values.ceemsLB.tlsSecret.secretName . | quote }}
+            items:
+              - key: {{ required "Value tlsSecret.certItem must be set." .Values.ceemsLB.tlsSecret.certItem | quote }}
+                path: {{ .Values.ceemsLB.tlsSecret.certItem | quote }}
+              - key: {{ required "Value tlsSecret.keyItem must be set." .Values.ceemsLB.tlsSecret.keyItem | quote }}
+                path: {{ .Values.ceemsLB.tlsSecret.keyItem | quote }}
+              {{- if .Values.ceemsLB.tlsSecret.caItem }}
+              - key: {{ .Values.ceemsLB.tlsSecret.caItem | quote }}
+                path: {{ .Values.ceemsLB.tlsSecret.caItem | quote }}
+              {{- end }}
+        {{- end }}
+        {{- with .Values.ceemsLB.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+{{- end }}

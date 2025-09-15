@@ -1,0 +1,20 @@
+---
+
+ceemsExporter:
+  collectors:
+    redfish:
+      enabled: true
+      chassisNames:
+        - Chassis_1
+      config:
+        protocol: http
+        hostname: ${NODE_NAME}
+        port: 5000
+        username: admin
+        password: somesupersecret
+
+redfishProxy:
+  enabled: true
+
+  kubeRBACProxy:
+    enabled: true

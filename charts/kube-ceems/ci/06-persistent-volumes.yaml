@@ -1,0 +1,34 @@
+---
+
+ceemsAPIServer:
+  persistence:
+    enabled: true
+    storageClassName: local-path
+    type: sts
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+
+ceemsLB:
+  ceemsAPIServer:
+    persistenceVolumeClaim: storage-{{ include "kube-ceems.api-server.fullname" . }}-0
+
+kube-prometheus-stack:
+  prometheus:
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: 
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+  grafana:
+    persistence:
+      enabled: true
+      storageClassName: local-path
+      type: sts
+      accessModes:
+        - ReadWriteOnce
+      size: 1Gi

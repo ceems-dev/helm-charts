@@ -1,0 +1,41 @@
+{{- if and .Values.ceemsAPIServer.enabled .Values.ceemsAPIServer.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kube-ceems.api-server.fullname" . }}
+  namespace: {{ include "kube-ceems.api-server.namespace" . }}
+  labels:
+    {{- include "kube-ceems.api-server.labels" $ | nindent 4 }}
+    {{- with .Values.ceemsAPIServer.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.ceemsAPIServer.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+{{- if .Values.ceemsAPIServer.service.ipDualStack.enabled }}
+  ipFamilies: {{ toYaml .Values.ceemsAPIServer.service.ipDualStack.ipFamilies | nindent 4 }}
+  ipFamilyPolicy: {{ .Values.ceemsAPIServer.service.ipDualStack.ipFamilyPolicy }}
+{{- end }}
+{{- if .Values.ceemsAPIServer.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.ceemsAPIServer.service.externalTrafficPolicy }}
+{{- end }}
+{{- if .Values.ceemsAPIServer.service.internalTrafficPolicy }}
+  internalTrafficPolicy: {{ .Values.ceemsAPIServer.service.internalTrafficPolicy }}
+{{- end }}
+  type: {{ .Values.ceemsAPIServer.service.type }}
+{{- if and (eq .Values.ceemsAPIServer.service.type "ClusterIP") .Values.ceemsAPIServer.service.clusterIP }}
+  clusterIP: "{{ .Values.ceemsAPIServer.service.clusterIP }}"
+{{- end }}
+  ports:
+    - port: {{ .Values.ceemsAPIServer.service.servicePort | default .Values.ceemsAPIServer.service.port }}
+      {{- if ( and (eq .Values.ceemsAPIServer.service.type "NodePort" ) (not (empty .Values.ceemsAPIServer.service.nodePort)) ) }}
+      nodePort: {{ .Values.ceemsAPIServer.service.nodePort }}
+      {{- end }}
+      targetPort: {{ .Values.ceemsAPIServer.service.targetPort }}
+      protocol: TCP
+      name: {{ .Values.ceemsAPIServer.service.portName }}
+  selector:
+    {{- include "kube-ceems.api-server.selectorLabels" . | nindent 4 }}
+{{- end }}

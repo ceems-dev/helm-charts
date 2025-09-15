@@ -1,0 +1,41 @@
+{{- if and .Values.redfishProxy.enabled .Values.redfishProxy.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kube-ceems.redfish-proxy.fullname" . }}
+  namespace: {{ include "kube-ceems.redfish-proxy.namespace" . }}
+  labels:
+    {{- include "kube-ceems.redfish-proxy.labels" $ | nindent 4 }}
+    {{- with .Values.redfishProxy.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.redfishProxy.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+{{- if .Values.redfishProxy.service.ipDualStack.enabled }}
+  ipFamilies: {{ toYaml .Values.redfishProxy.service.ipDualStack.ipFamilies | nindent 4 }}
+  ipFamilyPolicy: {{ .Values.redfishProxy.service.ipDualStack.ipFamilyPolicy }}
+{{- end }}
+{{- if .Values.redfishProxy.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.redfishProxy.service.externalTrafficPolicy }}
+{{- end }}
+{{- if .Values.redfishProxy.service.internalTrafficPolicy }}
+  internalTrafficPolicy: {{ .Values.redfishProxy.service.internalTrafficPolicy }}
+{{- end }}
+  type: {{ .Values.redfishProxy.service.type }}
+{{- if and (eq .Values.redfishProxy.service.type "ClusterIP") .Values.redfishProxy.service.clusterIP }}
+  clusterIP: "{{ .Values.redfishProxy.service.clusterIP }}"
+{{- end }}
+  ports:
+    - port: {{ .Values.redfishProxy.service.servicePort | default .Values.redfishProxy.service.port }}
+      {{- if ( and (eq .Values.redfishProxy.service.type "NodePort" ) (not (empty .Values.redfishProxy.service.nodePort)) ) }}
+      nodePort: {{ .Values.redfishProxy.service.nodePort }}
+      {{- end }}
+      targetPort: {{ .Values.redfishProxy.service.targetPort }}
+      protocol: TCP
+      name: {{ .Values.redfishProxy.service.portName }}
+  selector:
+    {{- include "kube-ceems.redfish-proxy.selectorLabels" . | nindent 4 }}
+{{- end }}

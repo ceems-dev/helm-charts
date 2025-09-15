@@ -1,0 +1,18 @@
+{{- if and .Values.redfishProxy.rbac.create .Values.redfishProxy.enabled }}
+{{- if or .Values.redfishProxy.kubeRBACProxy.enabled (gt (len .Values.redfishProxy.rbac.extraClusterRoleRules) 0) }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    {{- include "kube-ceems.redfish-proxy.labels" . | nindent 4 }}
+  name: {{ template "kube-ceems.redfish-proxy.fullname" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ template "kube-ceems.redfish-proxy.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ template "kube-ceems.redfish-proxy.serviceAccountName" . }}
+  namespace: {{ template "kube-ceems.redfish-proxy.namespace" . }}
+{{- end }}
+{{- end }}

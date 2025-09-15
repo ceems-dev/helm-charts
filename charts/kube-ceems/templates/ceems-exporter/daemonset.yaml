@@ -1,0 +1,454 @@
+{{- if .Values.ceemsExporter.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "kube-ceems.exporter.fullname" . }}
+  namespace: {{ include "kube-ceems.exporter.namespace" . }}
+  labels:
+    {{- include "kube-ceems.exporter.labels" . | nindent 4 }}
+  {{- with .Values.ceemsExporter.daemonsetAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "kube-ceems.exporter.selectorLabels" . | nindent 6 }}
+  revisionHistoryLimit: {{ .Values.ceemsExporter.revisionHistoryLimit }}
+  {{- with .Values.ceemsExporter.updateStrategy }}
+  updateStrategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      {{- with .Values.ceemsExporter.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "kube-ceems.exporter.labels" . | nindent 8 }}
+        {{- with .Values.ceemsExporter.podLabels }}
+        {{- tpl (toYaml .) $ | nindent 8 }}
+        {{- end }}
+    spec:
+      automountServiceAccountToken: {{ ternary true false (or .Values.ceemsExporter.serviceAccount.automountServiceAccountToken .Values.ceemsExporter.kubeRBACProxy.enabled) }}
+      {{- with .Values.ceemsExporter.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ceemsExporter.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      {{- with .Values.ceemsExporter.extraInitContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "kube-ceems.exporter.serviceAccountName" . }}
+      {{- with .Values.ceemsExporter.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ . }}
+      {{- end }}
+      containers:
+        {{- $servicePort := ternary .Values.ceemsExporter.kubeRBACProxy.port .Values.ceemsExporter.service.port .Values.ceemsExporter.kubeRBACProxy.enabled }}
+        - name: ceems-exporter
+          image: {{ include "kube-ceems.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/ceems_exporter
+          args:
+            - --path.procfs=/host/proc
+            - --path.sysfs=/host/sys
+            - --path.cgroupfs=/host/sys/fs/cgroup
+            - --web.listen-address=[$(HOST_IP)]:{{ $servicePort }}
+            {{- if eq .Values.ceemsExporter.collectors.k8s.enabled true }}
+            - --collector.k8s
+            - --collector.k8s.kubelet-socket-file={{ .Values.ceemsExporter.collectors.k8s.kubeletSocketDirectory }}/kubelet.sock
+            {{- end }}
+            {{- if eq .Values.ceemsExporter.collectors.slurm.enabled true }}
+            - --collector.slurm
+            {{- if ne .Values.ceemsExporter.collectors.slurm.configDirectory "" }}
+            - --collector.slurm.gres-config-file={{ .Values.ceemsExporter.collectors.slurm.configDirectory }}/gres.conf
+            {{- end }}
+            {{- end }}
+            {{- if eq .Values.ceemsExporter.collectors.ipmi.enabled true }}
+            - --collector.ipmi
+            - --collector.ipmi.dev-num={{ (split "/dev/ipmi" .Values.ceemsExporter.collectors.ipmi.device)._1 | trim }}
+            {{- if eq .Values.ceemsExporter.collectors.ipmi.monitorPowerEnergySensorReadings true }}
+            - --collector.ipmi.power-energy-sensor-readings
+            {{- end }}
+            {{- range $key, $value := .Values.ceemsExporter.collectors.ipmi.monitorSensorIDs }}
+            - --collector.ipmi.sensor-id={{ $value }}
+            {{- end }}
+            {{- end }}
+            {{- if eq .Values.ceemsExporter.collectors.redfish.enabled true }}
+            - --collector.redfish
+            - --collector.redfish.web-config=/etc/redfish/config.yaml
+            {{- end }}
+            {{- if eq .Values.ceemsExporter.collectors.hwmon.enabled true }}
+            - --collector.hwmon
+            {{- end }}
+            {{- if eq .Values.ceemsExporter.collectors.crayPMC.enabled true }}
+            - --collector.cray_pm_counters
+            {{- end }}
+            {{- if eq .Values.ceemsExporter.collectors.rapl.enabled true }}
+            - --collector.rapl
+            {{- end }}
+            {{- if eq .Values.ceemsExporter.eBPFProfiling.enabled true }}
+            - --profiling.ebpf
+            - --profiling.ebpf.config.file=/etc/profiling/config.yaml
+            - --security.run-as-user=root
+            {{- end }}
+            {{- if not (empty .Values.ceemsExporter.webConfig) }}
+            - --web.config.file=/etc/ceems-web/config.yaml
+            {{- end }}
+            {{- range $_, $arg := .Values.ceemsExporter.additionalArgs }}
+            {{- if (hasKey $arg "value") }}
+            - --{{ $arg.name }}={{ $arg.value }}
+            {{- else }}
+            - --{{ $arg.name }}
+            {{- end }}
+            {{- end }}
+          {{- with .Values.ceemsExporter.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: HOST_IP
+              {{- if .Values.ceemsExporter.kubeRBACProxy.enabled }}
+              value: 127.0.0.1
+              {{- else if .Values.ceemsExporter.service.listenOnAllInterfaces }}
+              value: 0.0.0.0
+              {{- else }}
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.hostIP
+              {{- end }}
+            {{- range $key, $value := .Values.ceemsExporter.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- if eq .Values.ceemsExporter.kubeRBACProxy.enabled false }}
+          ports:
+            - name: {{ .Values.ceemsExporter.service.portName }}
+              containerPort: {{ .Values.ceemsExporter.service.port }}
+              protocol: TCP
+          {{- end }}
+          livenessProbe:
+            failureThreshold: {{ .Values.ceemsExporter.livenessProbe.failureThreshold }}
+            exec:
+              command:
+                - /bin/liveness-probe.sh
+                - -a
+                - ceems_exporter
+                - -p
+                - {{ $servicePort | quote }}
+            initialDelaySeconds: {{ .Values.ceemsExporter.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.ceemsExporter.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.ceemsExporter.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.ceemsExporter.livenessProbe.timeoutSeconds }}
+          readinessProbe:
+            failureThreshold: {{ .Values.ceemsExporter.readinessProbe.failureThreshold }}
+            exec:
+              command:
+                - /bin/liveness-probe.sh
+                - -a
+                - ceems_exporter
+                - -p
+                - {{ $servicePort | quote }}
+            initialDelaySeconds: {{ .Values.ceemsExporter.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.ceemsExporter.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.ceemsExporter.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.ceemsExporter.readinessProbe.timeoutSeconds }}
+          {{- with .Values.ceemsExporter.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.ceemsExporter.terminationMessageParams.enabled }}
+          {{- with .Values.ceemsExporter.terminationMessageParams }}
+          terminationMessagePath: {{ .terminationMessagePath }}
+          terminationMessagePolicy: {{ .terminationMessagePolicy }}
+          {{- end }}
+          {{- end }}
+          volumeMounts:
+            - name: proc
+              mountPath: /host/proc
+              {{- with .Values.ceemsExporter.hostProcFsMount.mountPropagation }}
+              mountPropagation: {{ . }}
+              {{- end }}
+              readOnly:  true
+            - name: sys
+              mountPath: /host/sys
+              {{- with .Values.ceemsExporter.hostSysFsMount.mountPropagation }}
+              mountPropagation: {{ . }}
+              {{- end }}
+              readOnly: true
+            {{- if .Values.ceemsExporter.hostRootFsMount.enabled }}
+            - name: root
+              mountPath: /host/root
+              {{- with .Values.ceemsExporter.hostRootFsMount.mountPropagation }}
+              mountPropagation: {{ . }}
+              {{- end }}
+              readOnly: true
+            {{- end }}
+            {{- range $_, $mount := .Values.ceemsExporter.extraHostVolumeMounts }}
+            - name: {{ $mount.name }}
+              mountPath: {{ $mount.mountPath }}
+              readOnly: {{ $mount.readOnly }}
+              {{- with $mount.mountPropagation }}
+              mountPropagation: {{ . }}
+              {{- end -}}
+            {{- end -}}
+            {{- if eq .Values.ceemsExporter.collectors.ipmi.enabled true }}
+            - name: ipmi
+              mountPath: {{ .Values.ceemsExporter.collectors.ipmi.device }}
+              readOnly: false
+            {{- end }}
+            {{- if eq .Values.ceemsExporter.collectors.k8s.enabled true }}
+            - name: pod-resources
+              mountPath: {{ .Values.ceemsExporter.collectors.k8s.kubeletSocketDirectory }}
+              readOnly: false
+            {{- end }}
+            {{- if and (eq .Values.ceemsExporter.collectors.slurm.enabled true) (ne .Values.ceemsExporter.collectors.slurm.configDirectory "") }}
+            - name: slurm-config
+              mountPath: {{ .Values.ceemsExporter.collectors.slurm.configDirectory }}
+              readOnly: true
+            {{- end }}
+            {{- if eq .Values.ceemsExporter.collectors.libvirt.enabled true }}
+            - name: persistent-qemu-xml-dir
+              mountPath: /etc/libvirt/qemu
+              readOnly: true
+            - name: runtime-qemu-xml-dir
+              mountPath: /run/libvirt/qemu
+              readOnly: true
+            {{- end }}
+            {{- if eq .Values.ceemsExporter.collectors.redfish.enabled true }}
+            - name: redfish-config
+              mountPath: /etc/redfish
+            {{- end }}
+            {{- if eq .Values.ceemsExporter.eBPFProfiling.enabled true }}
+            - name: profiling-config
+              mountPath: /etc/profiling
+            {{- end }}
+            {{- if not (empty .Values.ceemsExporter.webConfig) }}
+            - name: ceems-exporter-web-config
+              mountPath: /etc/ceems-web
+            {{- end }}
+            {{- range $_, $mount := .Values.ceemsExporter.configmaps }}
+            - name: {{ tpl $mount.name $ | quote}}
+              mountPath: {{ $mount.mountPath }}
+            {{- end }}
+            {{- range $_, $mount := .Values.ceemsExporter.secrets }}
+            - name: {{ tpl $mount.name $ | quote }}
+              mountPath: {{ $mount.mountPath }}
+            {{- end }}
+            {{- with .Values.ceemsExporter.extraVolumeMounts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+        {{- if .Values.ceemsExporter.kubeRBACProxy.enabled }}
+        - name: kube-rbac-proxy
+          args:
+            {{- range $_, $arg := .Values.ceemsExporter.kubeRBACProxy.additionalArgs }}
+            {{- if (hasKey $arg "value") }}
+            - --{{ $arg.name }}={{ $arg.value }}
+            {{- else }}
+            - --{{ $arg.name }}
+            {{- end }}
+            {{- end }}
+            - --secure-listen-address=:{{ .Values.ceemsExporter.service.port }}
+            - --upstream=http://127.0.0.1:{{ $servicePort }}/
+            - --proxy-endpoints-port={{ .Values.ceemsExporter.kubeRBACProxy.proxyEndpointsPort }}
+            - --config-file=/etc/kube-rbac-proxy-config/config-file.yaml
+            {{- if and .Values.ceemsExporter.kubeRBACProxy.tls.enabled .Values.ceemsExporter.tlsSecret.enabled }}
+            - --tls-cert-file=/tls/private/{{ .Values.ceemsExporter.tlsSecret.certItem }}
+            - --tls-private-key-file=/tls/private/{{ .Values.ceemsExporter.tlsSecret.keyItem }}
+            {{- if and .Values.ceemsExporter.kubeRBACProxy.tls.tlsClientAuth .Values.ceemsExporter.tlsSecret.caItem }}
+            - --client-ca-file=/tls/private/{{ .Values.ceemsExporter.tlsSecret.caItem }}
+            {{- end }}
+            {{- end }}
+          volumeMounts:
+            - name: kube-rbac-proxy-config
+              mountPath: /etc/kube-rbac-proxy-config
+            {{- if and .Values.ceemsExporter.kubeRBACProxy.tls.enabled .Values.ceemsExporter.tlsSecret.enabled }}
+            - name: {{ tpl .Values.ceemsExporter.tlsSecret.volumeName . | quote }}
+              mountPath: /tls/private
+              readOnly: true
+            {{- end }}
+            {{- with .Values.ceemsExporter.kubeRBACProxy.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          imagePullPolicy: {{ .Values.ceemsExporter.kubeRBACProxy.image.pullPolicy }}
+          {{- if .Values.ceemsExporter.kubeRBACProxy.image.sha }}
+          image: "{{ .Values.ceemsExporter.imageRegistry | default .Values.ceemsExporter.kubeRBACProxy.image.registry}}/{{ .Values.ceemsExporter.kubeRBACProxy.image.repository }}:{{ .Values.ceemsExporter.kubeRBACProxy.image.tag }}@sha256:{{ .Values.ceemsExporter.kubeRBACProxy.image.sha }}"
+          {{- else }}
+          image: "{{ .Values.ceemsExporter.imageRegistry | default .Values.ceemsExporter.kubeRBACProxy.image.registry}}/{{ .Values.ceemsExporter.kubeRBACProxy.image.repository }}:{{ .Values.ceemsExporter.kubeRBACProxy.image.tag }}"
+          {{- end }}
+          ports:
+            - containerPort: {{ .Values.ceemsExporter.service.port}}
+              name: {{ .Values.ceemsExporter.kubeRBACProxy.portName }}
+              {{- if .Values.ceemsExporter.kubeRBACProxy.enableHostPort }}
+              hostPort: {{ .Values.ceemsExporter.service.port }}
+              {{- end }}
+            - containerPort: {{ .Values.ceemsExporter.kubeRBACProxy.proxyEndpointsPort }}
+              {{- if .Values.ceemsExporter.kubeRBACProxy.enableProxyEndpointsHostPort }}
+              hostPort: {{ .Values.ceemsExporter.kubeRBACProxy.proxyEndpointsPort }}
+              {{- end }}
+              name: "http-healthz"
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              port: {{ .Values.ceemsExporter.kubeRBACProxy.proxyEndpointsPort }}
+              path: healthz
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+          {{- if .Values.ceemsExporter.kubeRBACProxy.resources }}
+          resources:
+          {{- toYaml .Values.ceemsExporter.kubeRBACProxy.resources | nindent 12 }}
+          {{- end }}
+          {{- if .Values.ceemsExporter.terminationMessageParams.enabled }}
+          {{- with .Values.ceemsExporter.terminationMessageParams }}
+          terminationMessagePath: {{ .terminationMessagePath }}
+          terminationMessagePolicy: {{ .terminationMessagePolicy }}
+          {{- end }}
+          {{- end }}
+          {{- with .Values.ceemsExporter.kubeRBACProxy.env }}
+          env:
+            {{- range $key, $value := $.Values.ceemsExporter.kubeRBACProxy.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.ceemsExporter.kubeRBACProxy.containerSecurityContext }}
+          securityContext:
+          {{ toYaml .Values.ceemsExporter.kubeRBACProxy.containerSecurityContext | nindent 12 }}
+        {{- end }}
+        {{- end }}
+      {{- if or .Values.ceemsExporter.imagePullSecrets .Values.ceemsExporter.imagePullSecrets }}
+      imagePullSecrets:
+        {{- include "kube-ceems.imagePullSecrets" (dict "Values" .Values.ceemsExporter "imagePullSecrets" .Values.ceemsExporter.imagePullSecrets) | indent 8 }}
+      {{- end }}
+      hostNetwork: {{ .Values.ceemsExporter.hostNetwork }}
+      {{- if or (.Values.ceemsExporter.hostPID) (.Values.ceemsExporter.eBPFProfiling.enabled) }}
+      hostPID: true
+      {{- else }}
+      hostPID: false
+      {{- end }}
+      hostIPC: {{ .Values.ceemsExporter.hostIPC }}
+      {{- with .Values.ceemsExporter.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ceemsExporter.dnsConfig }}
+      dnsConfig:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ceemsExporter.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ceemsExporter.restartPolicy }}
+      restartPolicy: {{ . }}
+      {{- end }}
+      {{- with .Values.ceemsExporter.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: sys
+          hostPath:
+            path: /sys
+        {{- if .Values.ceemsExporter.hostRootFsMount.enabled }}
+        - name: root
+          hostPath:
+            path: /
+        {{- end }}
+        {{- range $_, $mount := .Values.ceemsExporter.extraHostVolumeMounts }}
+        - name: {{ $mount.name }}
+          hostPath:
+            path: {{ $mount.hostPath }}
+            {{- with $mount.type }}
+            type: {{ . }}
+            {{- end }}
+        {{- end -}}
+        {{- if eq .Values.ceemsExporter.collectors.ipmi.enabled true }}
+        - name: ipmi
+          hostPath:
+            path: {{ .Values.ceemsExporter.collectors.ipmi.device }}
+            type: CharDevice
+        {{- end }}
+        {{- if eq .Values.ceemsExporter.collectors.k8s.enabled true }}
+        - name: pod-resources
+          hostPath:
+            path: {{ .Values.ceemsExporter.collectors.k8s.kubeletSocketDirectory }}
+            type: Directory
+        {{- end }}
+        {{- if and (eq .Values.ceemsExporter.collectors.slurm.enabled true) (ne .Values.ceemsExporter.collectors.slurm.configDirectory "") }}
+        - name: slurm-config
+          hostPath:
+            path: {{ .Values.ceemsExporter.collectors.slurm.configDirectory }}
+            type: Directory
+        {{- end }}
+        {{- if eq .Values.ceemsExporter.collectors.libvirt.enabled true }}
+        - name: persistent-qemu-xml-dir
+          hostPath:
+            path: /etc/libvirt/qemu
+            type: Directory
+        - name: runtime-qemu-xml-dir
+          hostPath:
+            path: /run/libvirt/qemu
+            type: Directory
+        {{- end }}
+        {{- range $_, $mount := .Values.ceemsExporter.configmaps }}
+        - name: {{ tpl $mount.name $ | quote }}
+          configMap:
+            name: {{ tpl $mount.name $ | quote }}
+        {{- end }}
+        {{- range $_, $mount := .Values.ceemsExporter.secrets }}
+        - name: {{ tpl $mount.name $ | quote }}
+          secret:
+            secretName: {{tpl $mount.name $ | quote }}
+        {{- end }}
+        {{- if not (empty .Values.ceemsExporter.webConfig) }}
+        - name: ceems-exporter-web-config
+          secret:
+            secretName: {{ template "kube-ceems.exporter.fullname" . }}-web-config
+        {{- end }}
+        {{- if .Values.ceemsExporter.kubeRBACProxy.enabled }}
+        - name: kube-rbac-proxy-config
+          configMap:
+            name: {{ template "kube-ceems.exporter.fullname" . }}-rbac-config
+        {{- end }}
+        {{- if .Values.ceemsExporter.tlsSecret.enabled }}
+        - name: {{ tpl .Values.ceemsExporter.tlsSecret.volumeName . | quote }}
+          secret:
+            secretName: {{ tpl .Values.ceemsExporter.tlsSecret.secretName . | quote }}
+            items:
+              - key: {{ required "Value tlsSecret.certItem must be set." .Values.ceemsExporter.tlsSecret.certItem | quote }}
+                path: {{ .Values.ceemsExporter.tlsSecret.certItem | quote }}
+              - key: {{ required "Value tlsSecret.keyItem must be set." .Values.ceemsExporter.tlsSecret.keyItem | quote }}
+                path: {{ .Values.ceemsExporter.tlsSecret.keyItem | quote }}
+              {{- if .Values.ceemsExporter.tlsSecret.caItem }}
+              - key: {{ .Values.ceemsExporter.tlsSecret.caItem | quote }}
+                path: {{ .Values.ceemsExporter.tlsSecret.caItem | quote }}
+              {{- end }}
+        {{- end }}
+        {{- with .Values.ceemsExporter.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.ceemsExporter.collectors.redfish.enabled }}
+        - name: redfish-config
+          secret:
+            secretName: {{ template "kube-ceems.exporter.fullname" . }}-redfish-config
+        {{- end }}
+        {{- if .Values.ceemsExporter.eBPFProfiling.enabled }}
+        - name: profiling-config
+          secret:
+            secretName: {{ template "kube-ceems.exporter.fullname" . }}-profiling-config
+        {{- end }}
+{{- end }}

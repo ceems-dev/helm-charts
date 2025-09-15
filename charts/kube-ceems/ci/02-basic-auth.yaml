@@ -1,0 +1,54 @@
+---
+
+ceemsExporter:
+  webConfig:
+    basic_auth_users:
+      ceems: $2y$10$XdfIZZ7iibwGbyjniv6kcOPOTxH8lrCsXaljyBGubL.xLu1esjEpm
+
+  prometheus:
+    monitor:
+      enabled: true
+      basicAuth:
+        username:
+          name: kube-ceems-exporter-basic-auth-credentials
+          key: username
+        password:
+          name: kube-ceems-exporter-basic-auth-credentials
+          key: password
+
+  extraManifests:
+    - |
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: kube-ceems-exporter-basic-auth-credentials
+        namespace: {{ include "kube-ceems.exporter.namespace" . }}
+        labels:
+          {{- include "kube-ceems.exporter.labels" . | nindent 4 }}
+      data:
+        username: {{ b64enc "ceems" }}
+        password: {{ b64enc "ceems" }}
+
+ceemsAPIServer:
+  webConfig:
+    basic_auth_users:
+      ceems: $2y$10$XdfIZZ7iibwGbyjniv6kcOPOTxH8lrCsXaljyBGubL.xLu1esjEpm
+
+  grafana:
+    datasource:
+      create: true
+      basicAuth:
+        username: ceems
+        password: ceems
+
+ceemsLB:
+  webConfig:
+    basic_auth_users:
+      ceems: $2y$10$XdfIZZ7iibwGbyjniv6kcOPOTxH8lrCsXaljyBGubL.xLu1esjEpm
+
+  grafana:
+    datasource:
+      create: true
+      basicAuth:
+        username: ceems
+        password: ceems
