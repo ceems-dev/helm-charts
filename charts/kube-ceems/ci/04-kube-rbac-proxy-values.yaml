@@ -10,7 +10,7 @@ ceemsExporter:
     enabled: true
 
 ceemsAPIServer:
-  kubeRBACProxy: 
+  kubeRBACProxy:
     enabled: true
 
   grafana:
@@ -28,7 +28,7 @@ ceemsAPIServer:
       manager: k8s
       updaters:
         - myk8s-kube-rbac-proxy-tsdb
-  
+
   updaters:
     - id: myk8s-kube-rbac-proxy-tsdb
       updater: tsdb
@@ -41,13 +41,13 @@ ceemsAPIServer:
           insecure_skip_verify: true
   rbac:
     extraClusterRoleRules:
-      - apiGroups: [ "" ]
+      - apiGroups: [""]
         resources:
           - services/ceems-kube-ceems-prometheus
-        verbs: [ "get" ]
+        verbs: ["get"]
 
 ceemsLB:
-  kubeRBACProxy: 
+  kubeRBACProxy:
     enabled: true
 
   grafana:
@@ -78,10 +78,10 @@ ceemsLB:
 
   rbac:
     extraClusterRoleRules:
-      - apiGroups: [ "" ]
+      - apiGroups: [""]
         resources:
           - services/ceems-kube-ceems-prometheus
-        verbs: [ "get" ]
+        verbs: ["get"]
 
 kube-prometheus-stack:
   prometheus:
@@ -126,7 +126,7 @@ kube-prometheus-stack:
           volumeMounts:
           - name: kube-rbac-proxy-config
             mountPath: /etc/kube-rbac-proxy-config
-          
+
   extraManifests:
     - |
       apiVersion: v1
@@ -161,12 +161,12 @@ kube-prometheus-stack:
           httpHeaderValue1: "Bearer ${KUBE_RBAC_PROXY_token}"
     rbac:
       extraClusterRoleRules:
-        - apiGroups: [ "" ]
+        - apiGroups: [""]
           resources:
             - services/ceems-kube-ceems-api-server
             - services/ceems-kube-ceems-lb
             - services/ceems-kube-ceems-prometheus
-          verbs: [ "get" ]
+          verbs: ["get"]
     envFromSecrets:
       - name: grafana-svc-token
         prefix: KUBE_RBAC_PROXY_

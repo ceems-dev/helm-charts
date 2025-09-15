@@ -8,7 +8,7 @@ ceemsExporter:
         - Chassis_1
       config:
         protocol: http
-        hostname: ${NODE_NAME}
+        hostname: RUNNER_IP
         port: 5000
         username: admin
         password: somesupersecret

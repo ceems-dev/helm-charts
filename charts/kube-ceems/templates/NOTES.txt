@@ -10,6 +10,6 @@
   echo http://$SERVICE_IP:{{ .Values.kubePrometheusStackGrafana.service.port }}
 {{- else if contains "ClusterIP" .Values.kubePrometheusStackGrafana.service.type }}
   export POD_NAME=$(kubectl get pods --namespace {{ template "kube-ceems.namespace" . }} -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
-  echo "Visit http://127.0.0.1:80 to access Grafana"
-  kubectl port-forward --namespace {{ template "kube-ceems.namespace" . }} $POD_NAME 80
+  echo "Visit http://127.0.0.1:3000 to access Grafana"
+  kubectl port-forward --namespace {{ template "kube-ceems.namespace" . }} $POD_NAME 3000
 {{- end }}

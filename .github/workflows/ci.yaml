@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
@@ -37,10 +39,6 @@ jobs:
             echo "changed_list=\"${changed//$'\n'/ }\"" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: install helm unittest plugin
-        if: steps.list-changed.outputs.changed == 'true'
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version 0.8.2
-
       - name: Run chart-testing (lint)
         run: ct lint --config .github/linters/ct.yaml
 
@@ -48,13 +46,34 @@ jobs:
         uses: helm/kind-action@v1
         if: steps.list-changed.outputs.changed == 'true'
 
-      - name: Apply Gateway API CRDs
-        run: kubectl apply -k https://github.com/kubernetes-sigs/gateway-api/config/crd
+      - name: Install test prerequisites
         if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          # Install PV provider
+          kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.31/deploy/local-path-storage.yaml
+
+          # Install nginx ingress controller
+          helm upgrade --install ingress-nginx ingress-nginx --repo https://kubernetes.github.io/ingress-nginx --namespace ingress-nginx --create-namespace
+          kubectl get service --namespace ingress-nginx ingress-nginx-controller
+
+          # Setup redfish emulator
+          wget https://github.com/ceems-dev/fake-energy-counters/releases/download/v0.2.0/fake_energy_counters
+          chmod +x fake_energy_counters
+          # Start redfish emulator
+          ./fake_energy_counters --counters.redfish &
+          sleep 10
+
+          # Setup runner IP in ci values file
+          RUNNER_IP=$(ip -o route get to 8.8.8.8 | sed -n 's/.*src \([0-9.]\+\).*/\1/p')
+          sed -i "s/RUNNER_IP/${RUNNER_IP}/g" charts/kube-ceems/ci/09-with-redfish-proxy-values.yaml
+
+      - name: Apply Gateway API CRDs
+        if: steps.list-changed.outputs.changed == 'true'
+        run: kubectl apply -k https://github.com/kubernetes-sigs/gateway-api/config/crd
 
       - name: Apply Prometheus Operator CRDs
-        run: helm install prometheus-operator-crds oci://ghcr.io/prometheus-community/charts/prometheus-operator-crds
         if: steps.list-changed.outputs.changed == 'true'
+        run: helm install prometheus-operator-crds oci://ghcr.io/prometheus-community/charts/prometheus-operator-crds
 
       - name: Run chart-testing (install)
         run: ct install --config .github/linters/ct.yaml
@@ -67,6 +86,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Lint Code Base
         uses: super-linter/super-linter/slim@v8
