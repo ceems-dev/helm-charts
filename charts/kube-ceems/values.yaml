@@ -155,7 +155,7 @@ ceemsExporter:
       # run, it is installed as a separate deployment different from daemonset (which runs on all nodes).
       # The deployment will share the same configuration of daemonset except for the keys in the
       # `deploy` section. A very minimal deployment is used for emissions exporter meaning that no
-      # extra init containers, secrets, configmaps are mounted. 
+      # extra init containers, secrets, configmaps are mounted.
       #
       # If kube-rbac-proxy is enabled on daemonset, it will be enabled on deployment as well with the
       # same settings.
@@ -220,7 +220,7 @@ ceemsExporter:
   # can be turned on here.
   #
   # List of dicts with `name` and `value` fields. `value` field can be empty for
-  # name only arguments. 
+  # name only arguments.
   # For e.g., for `--collector.k8s --log.level=debug` set the following
   #
   # @raw
@@ -263,7 +263,7 @@ ceemsExporter:
     #
     # ```yaml
     # additionalArgs:
-    #   - name: log-file 
+    #   - name: log-file
     #     value: /path/to/log/file
     # ```
     #
@@ -1134,7 +1134,7 @@ ceemsAPIServer:
 
   # -- Additional arguments for CEEMS API server
   # List of dicts with `name` and `value` fields. `value` field can be empty for
-  # name only arguments. 
+  # name only arguments.
   # For e.g., for `--log.level=debug` set the following
   #
   # @raw
@@ -1149,7 +1149,7 @@ ceemsAPIServer:
   #   - name: log.level
   #     value: debug
 
-  
+
   # Grafana related configuration for CEEMS API server.
   grafana:
     datasource:
@@ -1217,7 +1217,7 @@ ceemsAPIServer:
     # -- Set environment variables as name/value pairs for kube-rbac-proxy
     env: {}
       # VARIABLE: value
-    
+
     image:
       registry: quay.io
       repository: brancz/kube-rbac-proxy
@@ -1236,7 +1236,7 @@ ceemsAPIServer:
     #
     # ```yaml
     # additionalArgs:
-    #   - name: log-file 
+    #   - name: log-file
     #     value: /path/to/log/file
     # ```
     #
@@ -1617,15 +1617,15 @@ ceemsLB:
   #
   config: {}
 
-  
+
   # -- CEEMS API server related configuration needed for CEEMS LB for imposing
   # access control on Prometheus data.
   #
   ceemsAPIServer:
-    # -- PVC for CEEMS API server's storage. 
+    # -- PVC for CEEMS API server's storage.
     # For best performance mount the volume that contains CEEMS DB. Provide the
     # persistence volume claim used by the CEEMS API server and PV containing
-    # CEEMS DB will be mounted into the CEEMS LB container. 
+    # CEEMS DB will be mounted into the CEEMS LB container.
     # Can be templated.
     persistenceVolumeClaim: ""
 
@@ -1641,7 +1641,7 @@ ceemsLB:
 
   # -- Additional arguments for CEEMS LB
   # List of dicts with `name` and `value` fields. `value` field can be empty for
-  # name only arguments. 
+  # name only arguments.
   # For e.g., for `--log.level=debug` set the following
   #
   # @raw
@@ -1722,7 +1722,7 @@ ceemsLB:
     # -- Set environment variables as name/value pairs for kube-rbac-proxy.
     env: {}
       # VARIABLE: value
-    
+
     image:
       registry: quay.io
       repository: brancz/kube-rbac-proxy
@@ -1741,7 +1741,7 @@ ceemsLB:
     #
     # ```yaml
     # additionalArgs:
-    #   - name: log-file 
+    #   - name: log-file
     #     value: /path/to/log/file
     # ```
     #
@@ -2087,7 +2087,7 @@ redfishProxy:
 
   # -- Additional arguments for redfish proxy
   # List of dicts with `name` and `value` fields. `value` field can be empty for
-  # name only arguments. 
+  # name only arguments.
   # For e.g., for `--log.level=debug` set the following
   #
   # @raw
@@ -2110,7 +2110,7 @@ redfishProxy:
     # -- Set environment variables as name/value pairs
     env: {}
       # VARIABLE: value
-    
+
     image:
       registry: quay.io
       repository: brancz/kube-rbac-proxy
@@ -2129,7 +2129,7 @@ redfishProxy:
     #
     # ```yaml
     # additionalArgs:
-    #   - name: log-file 
+    #   - name: log-file
     #     value: /path/to/log/file
     # ```
     #
@@ -2527,7 +2527,7 @@ kube-prometheus-stack:
       datasources:
         # -- Enable datasources sidecar.
         enabled: true
-        # -- Create default Prometheus datasource. 
+        # -- Create default Prometheus datasource.
         defaultDatasourceEnabled: true
         # -- Label that the configmaps with datasources are marked with (can be templated)
         label: kube-ceems-grafana-datasource
