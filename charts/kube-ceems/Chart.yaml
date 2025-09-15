@@ -1,6 +1,7 @@
 apiVersion: v2
 name: kube-ceems
 description: A Helm chart for deploying CEEMS
+icon: https://raw.githubusercontent.com/ceems-dev/ceems/main/website/static/img/logo.png
 keywords:
   - ceems-exporter
   - ceems-api-server

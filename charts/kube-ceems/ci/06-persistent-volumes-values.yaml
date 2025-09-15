@@ -19,7 +19,7 @@ kube-prometheus-stack:
       volumeClaimTemplate:
         spec:
           storageClassName: local-path
-          accessModes: 
+          accessModes:
             - ReadWriteOnce
           resources:
             requests:

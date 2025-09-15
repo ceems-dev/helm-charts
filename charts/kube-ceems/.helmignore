@@ -20,4 +20,13 @@
 .idea/
 *.tmproj
 
+# helm files
 ci/
+hack/
+kube-ceems-*.tgz
+
+unittests/
+
+UPGRADE.md
+CONTRIBUTING.md
+.editorconfig
