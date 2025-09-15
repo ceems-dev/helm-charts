@@ -25,7 +25,7 @@ commonLabels: {}
 image:
   registry: quay.io
   repository: ceems/ceems
-  # -- Overrides the image tag whose default is {{ printf "v%s" .Chart.AppVersion }}
+  # -- Overrides the image tag whose default is `{{ printf "v%s" .Chart.AppVersion }}`
   tag: ""
   pullPolicy: IfNotPresent
   digest: ""
