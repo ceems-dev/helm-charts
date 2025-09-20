@@ -30,3 +30,4 @@ unittests/
 UPGRADE.md
 CONTRIBUTING.md
 .editorconfig
+.helm-docs/

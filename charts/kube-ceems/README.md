@@ -1,6 +1,8 @@
+<!-- textlint-disable -->
+
 # kube-ceems
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.11.2](https://img.shields.io/badge/AppVersion-0.11.2-informational?style=flat-square)
+![Version: 0.1.2](https://img.shields.io/badge/Version-0.1.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.11.2](https://img.shields.io/badge/AppVersion-0.11.2-informational?style=flat-square)
 
 A Helm chart for deploying CEEMS
 
@@ -22,6 +24,8 @@ A Helm chart for deploying CEEMS
 |------------|------|---------|
 | https://grafana.github.io/helm-charts | pyroscope | 1.14.1 |
 | https://prometheus-community.github.io/helm-charts | kube-prometheus-stack | 75.10.* |
+
+<!-- textlint-enable -->
 
 ## Description
 
@@ -228,7 +232,7 @@ string
 </div>
 			</td>
 			<td>
-Overrides the image tag whose default is {{ printf "v%s" .Chart.AppVersion }}
+Overrides the image tag whose default is `{{ printf "v%s" .Chart.AppVersion }}`
 </td>
 		</tr>
 		<tr>
@@ -781,7 +785,7 @@ true
 </div>
 			</td>
 			<td>
-Enable emissions collector. As only a single instance of emission collector must be run, it is installed as a separate deployment different from daemonset (which runs on all nodes). The deployment will share the same configuration of daemonset except for the keys in the <code>deploy</code> section. A very minimal deployment is used for emissions exporter meaning that no extra init containers, secrets, configmaps are mounted.   If kube-rbac-proxy is enabled on daemonset, it will be enabled on deployment as well with the same settings.
+Enable emissions collector. As only a single instance of emission collector must be run, it is installed as a separate deployment different from daemonset (which runs on all nodes). The deployment will share the same configuration of daemonset except for the keys in the <code>deploy</code> section. A very minimal deployment is used for emissions exporter meaning that no extra init containers, secrets, configmaps are mounted.  If kube-rbac-proxy is enabled on daemonset, it will be enabled on deployment as well with the same settings.
 </td>
 		</tr>
 		<tr>
@@ -965,7 +969,7 @@ list
 </div>
 			</td>
 			<td>
-Additional arguments for CEEMS exporter. Any other collectors that are not presented under `ceemsExporter.collectors` can be turned on here.  List of dicts with <code>name</code> and <code>value</code> fields. <code>value</code> field can be empty for name only arguments.  For e.g., for `--collector.k8s --log.level=debug` set the following
+Additional arguments for CEEMS exporter. Any other collectors that are not presented under `ceemsExporter.collectors` can be turned on here.  List of dicts with <code>name</code> and <code>value</code> fields. <code>value</code> field can be empty for name only arguments. For e.g., for `--collector.k8s --log.level=debug` set the following
 ```yaml
 additionalArgs:
   - name: collector.k8s
@@ -5079,7 +5083,7 @@ list
 </div>
 			</td>
 			<td>
-Additional arguments for CEEMS API server List of dicts with <code>name</code> and <code>value</code> fields. <code>value</code> field can be empty for name only arguments.  For e.g., for `--log.level=debug` set the following
+Additional arguments for CEEMS API server List of dicts with <code>name</code> and <code>value</code> fields. <code>value</code> field can be empty for name only arguments. For e.g., for `--log.level=debug` set the following
 
 ```yaml
 additionalArgs:
@@ -7006,7 +7010,7 @@ string
 </div>
 			</td>
 			<td>
-PVC for CEEMS API server's storage.  For best performance mount the volume that contains CEEMS DB. Provide the persistence volume claim used by the CEEMS API server and PV containing CEEMS DB will be mounted into the CEEMS LB container.  Can be templated.
+PVC for CEEMS API server's storage. For best performance mount the volume that contains CEEMS DB. Provide the persistence volume claim used by the CEEMS API server and PV containing CEEMS DB will be mounted into the CEEMS LB container. Can be templated.
 </td>
 		</tr>
 		<tr>
@@ -7060,7 +7064,7 @@ list
 </div>
 			</td>
 			<td>
-Additional arguments for CEEMS LB List of dicts with <code>name</code> and <code>value</code> fields. <code>value</code> field can be empty for name only arguments.  For e.g., for `--log.level=debug` set the following
+Additional arguments for CEEMS LB List of dicts with <code>name</code> and <code>value</code> fields. <code>value</code> field can be empty for name only arguments. For e.g., for `--log.level=debug` set the following
 
 ```yaml
 additionalArgs:
@@ -8747,7 +8751,7 @@ list
 </div>
 			</td>
 			<td>
-Additional arguments for redfish proxy List of dicts with <code>name</code> and <code>value</code> fields. <code>value</code> field can be empty for name only arguments.  For e.g., for `--log.level=debug` set the following
+Additional arguments for redfish proxy List of dicts with <code>name</code> and <code>value</code> fields. <code>value</code> field can be empty for name only arguments. For e.g., for `--log.level=debug` set the following
 
 ```yaml
 additionalArgs:

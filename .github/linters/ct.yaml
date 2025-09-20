@@ -1,4 +1,6 @@
 ---
+additional-commands:
+  - sh -ec "if [ -f '{{ .Path }}/ci/lint.sh' ]; then shellcheck '{{ .Path }}/ci/lint.sh'; bash '{{ .Path }}/ci/lint.sh'; fi"
 chart-dirs:
   - charts
 chart-repos:
