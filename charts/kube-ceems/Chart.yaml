@@ -20,7 +20,7 @@ keywords:
   - network
   - ebpf
 type: application
-version: 0.1.2
+version: 0.2.0
 # renovate: github=ceems-dev/ceems
 appVersion: 0.11.2
 home: https://ceems-dev.github.io/helm-charts/
@@ -39,13 +39,13 @@ annotations:
       url: https://github.com/ceems-dev/ceems
 dependencies:
   - name: kube-prometheus-stack
-    version: "75.10.*"
+    version: "75.18.*"
     repository: https://prometheus-community.github.io/helm-charts
     condition: kubePrometheusStack.enabled
     import-values:
       - child: grafana
         parent: kubePrometheusStackGrafana
   - name: pyroscope
-    version: "1.14.1"
+    version: "1.15.0"
     repository: https://grafana.github.io/helm-charts
     condition: pyroscopeServer.enabled
