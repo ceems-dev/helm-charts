@@ -20,7 +20,7 @@ keywords:
   - network
   - ebpf
 type: application
-version: 0.1.2
+version: 0.2.0
 # renovate: github=ceems-dev/ceems
 appVersion: 0.11.2
 home: https://ceems-dev.github.io/helm-charts/
@@ -39,7 +39,7 @@ annotations:
       url: https://github.com/ceems-dev/ceems
 dependencies:
   - name: kube-prometheus-stack
-    version: "75.10.*"
+    version: "77.10.*"
     repository: https://prometheus-community.github.io/helm-charts
     condition: kubePrometheusStack.enabled
     import-values:
