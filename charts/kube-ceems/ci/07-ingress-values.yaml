@@ -1,28 +1,38 @@
 ---
+# This scenario shows how to configure Ingress to Prometheus,
+# Grafana and Pyroscope servers.
+#
+# nginx ingress controller is used in the present scenario.
 
 kube-prometheus-stack:
   prometheus:
+    # Serve Prometheus at a path prefix
+    prometheusSpec:
+      routePrefix: /prometheus
+
+    # Setup ingress for Prometheus server
     ingress:
       enabled: true
       ingressClassName: nginx
       paths:
         - /prometheus
+      # Setup hosts based on deployment
       hosts:
         - helm-charts.ceems.dev
 
-    prometheusSpec:
-      routePrefix: /prometheus
-
   grafana:
+    # Serve Grafana at a path prefix /grafana
     env:
       GF_DATAPROXY_SEND_USER_HEADER: true
       GF_SERVER_ROOT_URL: http://localhost:3000/grafana
       GF_SERVER_SERVE_FROM_SUB_PATH: true
 
+    # Setup ingress for Grafana server
     ingress:
       enabled: true
       ingressClassName: nginx
       path: /grafana
+      # Setup hosts based on deployment
       hosts:
         - helm-charts.ceems.dev
 
@@ -30,8 +40,14 @@ pyroscopeServer:
   enabled: true
 
 pyroscope:
+  # Setup ingress for Pyroscope server.
+  # Currently Pyroscope server does not support running
+  # web server at a path prefix.
+  # So, Pyroscope server will be running at root (`/`) of
+  # ingress.
   ingress:
     enabled: true
     ingressClassName: nginx
+    # Setup hosts based on deployment
     hosts:
       - helm-charts.ceems.dev

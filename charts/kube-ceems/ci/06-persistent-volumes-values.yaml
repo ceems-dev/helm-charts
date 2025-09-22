@@ -1,6 +1,13 @@
 ---
+# This scenario shows how to configure Persistent Volumes (PV)
+# for the components that require them like CEEMS API server,
+# Prometheus and Grafana.
+#
+# For sake of simplicity, local-path-provisioner (https://github.com/rancher/local-path-provisioner)
+# is used as it is practical to test is easily in CI.
 
 ceemsAPIServer:
+  # Enable persistence for CEEMS API server
   persistence:
     enabled: true
     storageClassName: local-path
@@ -10,11 +17,15 @@ ceemsAPIServer:
     size: 1Gi
 
 ceemsLB:
+  # Setup PVC for mounting CEEMS API server DB on CEEMS LB container.
+  # This claim name depends on storage class and must be modified
+  # appropriately based on the storage class used.
   ceemsAPIServer:
     persistenceVolumeClaim: storage-{{ include "kube-ceems.api-server.fullname" . }}-0
 
 kube-prometheus-stack:
   prometheus:
+    # Enable persistent volume for Prometheus
     storageSpec:
       volumeClaimTemplate:
         spec:
@@ -25,6 +36,7 @@ kube-prometheus-stack:
             requests:
               storage: 1Gi
   grafana:
+    # Enable persistent volume for Grafana
     persistence:
       enabled: true
       storageClassName: local-path

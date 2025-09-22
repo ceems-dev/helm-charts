@@ -1,6 +1,17 @@
 ---
 
+# This scenario uses basic auth for all the CEEMS components so that
+# any unauthorised access of CEEMS exporter, API server and LB can be
+# avoided
+#
+# Prometheus Helm chart does not support basic auth natively and hence,
+# the configuration is not provided. It can be protected using mTLS
+# or kube RBAC proxy as shown in other Values files in the folder.
+
 ceemsExporter:
+  # CEEMS exporter web config
+  # Username: ceems
+  # Plain text password: ceems
   webConfig:
     basic_auth_users:
       ceems: $2y$10$XdfIZZ7iibwGbyjniv6kcOPOTxH8lrCsXaljyBGubL.xLu1esjEpm
@@ -8,6 +19,8 @@ ceemsExporter:
   prometheus:
     monitor:
       enabled: true
+      # Basic auth credentials of CEEMS exporter for service monitor to scrape
+      # targets
       basicAuth:
         username:
           name: kube-ceems-exporter-basic-auth-credentials
@@ -16,6 +29,8 @@ ceemsExporter:
           name: kube-ceems-exporter-basic-auth-credentials
           key: password
 
+  # Plain text username and password must be created as secret for Prometheus
+  # service monitor to read
   extraManifests:
     - |
       apiVersion: v1
@@ -30,6 +45,9 @@ ceemsExporter:
         password: {{ b64enc "ceems" }}
 
 ceemsAPIServer:
+  # CEEMS API server web config
+  # Username: ceems
+  # Plain text password: ceems
   webConfig:
     basic_auth_users:
       ceems: $2y$10$XdfIZZ7iibwGbyjniv6kcOPOTxH8lrCsXaljyBGubL.xLu1esjEpm
@@ -37,11 +55,16 @@ ceemsAPIServer:
   grafana:
     datasource:
       create: true
+      # Create Grafana datasource for CEEMS API server using basic auth credentials
+      # as below (in plain text)
       basicAuth:
         username: ceems
         password: ceems
 
 ceemsLB:
+  # CEEMS LB web config
+  # Username: ceems
+  # Plain text password: ceems
   webConfig:
     basic_auth_users:
       ceems: $2y$10$XdfIZZ7iibwGbyjniv6kcOPOTxH8lrCsXaljyBGubL.xLu1esjEpm
@@ -49,6 +72,8 @@ ceemsLB:
   grafana:
     datasource:
       create: true
+      # Create Grafana datasource for CEEMS LB using basic auth credentials
+      # as below (in plain text)
       basicAuth:
         username: ceems
         password: ceems

@@ -2537,6 +2537,13 @@ kube-prometheus-stack:
         searchNamespace: ""
         # -- Default datasource name
         name: CEEMS-Prometheus
+        # -- Environment variables for sidecar container.
+        # If `certificate verify failed` errors are seen in the sidecar logs, it means
+        # sidecar container is unable to verify Kubernetes API server's CA certificate.
+        # More details can be found in this [GitHub Issue](https://github.com/kiwigrid/k8s-sidecar/issues/400).
+        # To circumvent the problem, use `SKIP_TLS_VERIFY: true`. However, note that this is
+        # not a formidable solution for production deployments.
+        env: {}
 
         # -- Disable alert manager
         alertmanager:
@@ -2561,6 +2568,14 @@ kube-prometheus-stack:
           updateIntervalSeconds: 600
           # -- Allow Grafana to replicate dashboard structure from filesystem
           foldersFromFilesStructure: true
+
+        # -- Environment variables for sidecar container.
+        # If `certificate verify failed` errors are seen in the sidecar logs, it means
+        # sidecar container is unable to verify Kubernetes API server's CA certificate.
+        # More details can be found in this [GitHub Issue](https://github.com/kiwigrid/k8s-sidecar/issues/400).
+        # To circumvent the problem, use `SKIP_TLS_VERIFY: true`. However, note that this is
+        # not a formidable solution for production deployments.
+        env: {}
 
     serviceMonitor:
       # -- If true, a `ServiceMonitor` CRD is created for a prometheus operator
