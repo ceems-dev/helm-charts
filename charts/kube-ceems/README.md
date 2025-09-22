@@ -2,7 +2,7 @@
 
 # kube-ceems
 
-![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.11.2](https://img.shields.io/badge/AppVersion-0.11.2-informational?style=flat-square)
+![Version: 0.2.1](https://img.shields.io/badge/Version-0.2.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.11.2](https://img.shields.io/badge/AppVersion-0.11.2-informational?style=flat-square)
 
 A Helm chart for deploying CEEMS
 
@@ -100,7 +100,11 @@ To see all configurable options with detailed comments:
 helm show values oci://ghcr.io/ceems-dev/charts/kube-ceems
 ```
 
-You may also `helm show values` on this chart's [dependencies](#dependencies) for additional options.
+You may also consult chart's [Values](#values) for detailed description of all values.
+
+Values files in the [ci](./ci) folder can be a good starting point for setting up production
+deployments with authentication. Each file shows a different scenario with detailed comments
+are provided in the files.
 
 ## Multiple releases
 
@@ -10655,8 +10659,26 @@ Default datasource name
 </td>
 		</tr>
 		<tr>
+			<td id="kube-prometheus-stack--grafana--sidecar--datasources--env">
+              <div style="max-width: 250px;"><a href="./values.yaml#L2546">kube-prometheus-stack.grafana.sidecar.datasources.env</a></div>
+            </td>
+            <td>
+object
+</td>
+			<td>
+				<div style="max-width: 250px;">
+<pre lang="json">
+{}
+</pre>
+</div>
+			</td>
+			<td>
+Environment variables for sidecar container. If `certificate verify failed` errors are seen in the sidecar logs, it means sidecar container is unable to verify Kubernetes API server's CA certificate. More details can be found in this <a target="_blank" href="https://github.com/kiwigrid/k8s-sidecar/issues/400">GitHub Issue</a>. To circumvent the problem, use `SKIP_TLS_VERIFY: true`. However, note that this is not a formidable solution for production deployments.
+</td>
+		</tr>
+		<tr>
 			<td id="kube-prometheus-stack--grafana--sidecar--datasources--alertmanager">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2542">kube-prometheus-stack.grafana.sidecar.datasources.alertmanager</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2549">kube-prometheus-stack.grafana.sidecar.datasources.alertmanager</a></div>
             </td>
             <td>
 object
@@ -10676,7 +10698,7 @@ Disable alert manager
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--grafana--sidecar--dashboards--enabled">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2546">kube-prometheus-stack.grafana.sidecar.dashboards.enabled</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2553">kube-prometheus-stack.grafana.sidecar.dashboards.enabled</a></div>
             </td>
             <td>
 bool
@@ -10694,7 +10716,7 @@ Enable dashboards sidecar.
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--grafana--sidecar--dashboards--label">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2548">kube-prometheus-stack.grafana.sidecar.dashboards.label</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2555">kube-prometheus-stack.grafana.sidecar.dashboards.label</a></div>
             </td>
             <td>
 string
@@ -10712,7 +10734,7 @@ Label that the configmaps with dashboards are marked with (can be templated)
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--grafana--sidecar--dashboards--labelValue">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2550">kube-prometheus-stack.grafana.sidecar.dashboards.labelValue</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2557">kube-prometheus-stack.grafana.sidecar.dashboards.labelValue</a></div>
             </td>
             <td>
 string
@@ -10730,7 +10752,7 @@ Value of label that the configmaps with dashboards are set to (can be templated)
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--grafana--sidecar--dashboards--searchNamespace">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2552">kube-prometheus-stack.grafana.sidecar.dashboards.searchNamespace</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2559">kube-prometheus-stack.grafana.sidecar.dashboards.searchNamespace</a></div>
             </td>
             <td>
 string
@@ -10748,7 +10770,7 @@ Search for dashboards only in current namespace.
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--grafana--sidecar--dashboards--folderAnnotation">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2554">kube-prometheus-stack.grafana.sidecar.dashboards.folderAnnotation</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2561">kube-prometheus-stack.grafana.sidecar.dashboards.folderAnnotation</a></div>
             </td>
             <td>
 string
@@ -10766,7 +10788,7 @@ Annotation to set the name of the folder
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--grafana--sidecar--dashboards--provider">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2557">kube-prometheus-stack.grafana.sidecar.dashboards.provider</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2564">kube-prometheus-stack.grafana.sidecar.dashboards.provider</a></div>
             </td>
             <td>
 object
@@ -10788,7 +10810,7 @@ Dashboard provider config
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--grafana--sidecar--dashboards--provider--name">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2559">kube-prometheus-stack.grafana.sidecar.dashboards.provider.name</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2566">kube-prometheus-stack.grafana.sidecar.dashboards.provider.name</a></div>
             </td>
             <td>
 string
@@ -10806,7 +10828,7 @@ name of the provider, should be unique
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--grafana--sidecar--dashboards--provider--updateIntervalSeconds">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2561">kube-prometheus-stack.grafana.sidecar.dashboards.provider.updateIntervalSeconds</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2568">kube-prometheus-stack.grafana.sidecar.dashboards.provider.updateIntervalSeconds</a></div>
             </td>
             <td>
 int
@@ -10824,7 +10846,7 @@ Interval at which to check for dashboard updates
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--grafana--sidecar--dashboards--provider--foldersFromFilesStructure">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2563">kube-prometheus-stack.grafana.sidecar.dashboards.provider.foldersFromFilesStructure</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2570">kube-prometheus-stack.grafana.sidecar.dashboards.provider.foldersFromFilesStructure</a></div>
             </td>
             <td>
 bool
@@ -10841,8 +10863,26 @@ Allow Grafana to replicate dashboard structure from filesystem
 </td>
 		</tr>
 		<tr>
+			<td id="kube-prometheus-stack--grafana--sidecar--dashboards--env">
+              <div style="max-width: 250px;"><a href="./values.yaml#L2578">kube-prometheus-stack.grafana.sidecar.dashboards.env</a></div>
+            </td>
+            <td>
+object
+</td>
+			<td>
+				<div style="max-width: 250px;">
+<pre lang="json">
+{}
+</pre>
+</div>
+			</td>
+			<td>
+Environment variables for sidecar container. If `certificate verify failed` errors are seen in the sidecar logs, it means sidecar container is unable to verify Kubernetes API server's CA certificate. More details can be found in this <a target="_blank" href="https://github.com/kiwigrid/k8s-sidecar/issues/400">GitHub Issue</a>. To circumvent the problem, use `SKIP_TLS_VERIFY: true`. However, note that this is not a formidable solution for production deployments.
+</td>
+		</tr>
+		<tr>
 			<td id="kube-prometheus-stack--grafana--serviceMonitor--enabled">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2569">kube-prometheus-stack.grafana.serviceMonitor.enabled</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2584">kube-prometheus-stack.grafana.serviceMonitor.enabled</a></div>
             </td>
             <td>
 bool
@@ -10860,7 +10900,7 @@ If true, a <code>ServiceMonitor</code> CRD is created for a prometheus operator 
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--extraManifests">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2574">kube-prometheus-stack.extraManifests</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2589">kube-prometheus-stack.extraManifests</a></div>
             </td>
             <td>
 dict or list
@@ -10878,7 +10918,7 @@ Extra manifests to deploy.  Can be of type dict or list. If dict, keys are ignor
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--thanosRuler">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2601">kube-prometheus-stack.thanosRuler</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2616">kube-prometheus-stack.thanosRuler</a></div>
             </td>
             <td>
 object
@@ -10898,7 +10938,7 @@ Disable thanosRuler Ref: https://thanos.io/tip/components/rule.md/
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--alertmanager">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2607">kube-prometheus-stack.alertmanager</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2622">kube-prometheus-stack.alertmanager</a></div>
             </td>
             <td>
 object
@@ -10918,7 +10958,7 @@ Disable alertmanager Ref: https://prometheus.io/docs/alerting/alertmanager/
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--kubernetesServiceMonitors">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2612">kube-prometheus-stack.kubernetesServiceMonitors</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2627">kube-prometheus-stack.kubernetesServiceMonitors</a></div>
             </td>
             <td>
 object
@@ -10938,7 +10978,7 @@ Flag to disable all the kubernetes component scrapers
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--kubeApiServer">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2617">kube-prometheus-stack.kubeApiServer</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2632">kube-prometheus-stack.kubeApiServer</a></div>
             </td>
             <td>
 object
@@ -10958,7 +10998,7 @@ Disable component scraping the kube api server
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--kubelet">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2622">kube-prometheus-stack.kubelet</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2637">kube-prometheus-stack.kubelet</a></div>
             </td>
             <td>
 object
@@ -10978,7 +11018,7 @@ Disable component scraping the kubelet and kubelet-hosted cAdvisor
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--kubeControllerManager">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2627">kube-prometheus-stack.kubeControllerManager</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2642">kube-prometheus-stack.kubeControllerManager</a></div>
             </td>
             <td>
 object
@@ -10998,7 +11038,7 @@ Disable component scraping the kube controller manager
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--coreDns">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2632">kube-prometheus-stack.coreDns</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2647">kube-prometheus-stack.coreDns</a></div>
             </td>
             <td>
 object
@@ -11018,7 +11058,7 @@ Disable component scraping coreDns. Use either this or kubeDns
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--kubeDns">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2637">kube-prometheus-stack.kubeDns</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2652">kube-prometheus-stack.kubeDns</a></div>
             </td>
             <td>
 object
@@ -11038,7 +11078,7 @@ Disable component scraping kubeDns. Use either this or coreDns
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--kubeEtcd">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2642">kube-prometheus-stack.kubeEtcd</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2657">kube-prometheus-stack.kubeEtcd</a></div>
             </td>
             <td>
 object
@@ -11058,7 +11098,7 @@ Disable component scraping etcd
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--kubeScheduler">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2647">kube-prometheus-stack.kubeScheduler</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2662">kube-prometheus-stack.kubeScheduler</a></div>
             </td>
             <td>
 object
@@ -11078,7 +11118,7 @@ Disable component scraping kube scheduler
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--kubeProxy">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2652">kube-prometheus-stack.kubeProxy</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2667">kube-prometheus-stack.kubeProxy</a></div>
             </td>
             <td>
 object
@@ -11098,7 +11138,7 @@ Disable component scraping kube proxy
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--kubeStateMetrics">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2657">kube-prometheus-stack.kubeStateMetrics</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2672">kube-prometheus-stack.kubeStateMetrics</a></div>
             </td>
             <td>
 object
@@ -11118,7 +11158,7 @@ Disable component scraping kube state metrics
 		</tr>
 		<tr>
 			<td id="kube-prometheus-stack--nodeExporter">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2662">kube-prometheus-stack.nodeExporter</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2677">kube-prometheus-stack.nodeExporter</a></div>
             </td>
             <td>
 object
@@ -11138,7 +11178,7 @@ Disable deploying node exporter as a daemonset to all nodes
 		</tr>
 		<tr>
 			<td id="pyroscopeServer">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2666">pyroscopeServer</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2681">pyroscopeServer</a></div>
             </td>
             <td>
 object
@@ -11158,7 +11198,7 @@ Enable deploying Grafana Pyroscope server.
 		</tr>
 		<tr>
 			<td id="pyroscope--pyroscope--fullnameOverride">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2675">pyroscope.pyroscope.fullnameOverride</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2690">pyroscope.pyroscope.fullnameOverride</a></div>
             </td>
             <td>
 string
@@ -11176,7 +11216,7 @@ If this is not empty, configs for CEEMS exporter and CEEMS LB must be manually p
 		</tr>
 		<tr>
 			<td id="pyroscope--ingress">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2678">pyroscope.ingress</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2693">pyroscope.ingress</a></div>
             </td>
             <td>
 object
@@ -11196,7 +11236,7 @@ Disable ingress
 		</tr>
 		<tr>
 			<td id="pyroscope--alloy">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2682">pyroscope.alloy</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2697">pyroscope.alloy</a></div>
             </td>
             <td>
 object
@@ -11216,7 +11256,7 @@ Disable alloy
 		</tr>
 		<tr>
 			<td id="pyroscope--agent">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2686">pyroscope.agent</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2701">pyroscope.agent</a></div>
             </td>
             <td>
 object
@@ -11236,7 +11276,7 @@ Disable alloy agent
 		</tr>
 		<tr>
 			<td id="pyroscope--minio">
-              <div style="max-width: 250px;"><a href="./values.yaml#L2690">pyroscope.minio</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L2705">pyroscope.minio</a></div>
             </td>
             <td>
 object

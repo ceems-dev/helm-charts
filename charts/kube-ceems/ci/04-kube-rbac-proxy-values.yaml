@@ -1,44 +1,39 @@
 ---
+# This scenario uses kube RBAC proxy for all the CEEMS components so that
+# any unauthorised access of CEEMS exporter, API server and LB can be
+# avoided.
+#
+# This scenario also enables eBPF based profiling and Pyroscope server.
+#
+# Prometheus is also configured to use kube RBAC proxy.
+#
+# All the services that need to query CEEMS components or Prometheus
+# must include a role imposed by kube RBAC proxy to query them
+#
+# As Grafana is user facing service TLS is usually setup on ingress
+# using load balancer and as it is highly environment dependent, it
+# is omitted here.
 
+# Use a human readable cluster ID as we need to provide CEEMS API server and LB
+# configs manually.
 clusterID: myk8s-kube-rbac-proxy
 
 ceemsExporter:
+  # Enable eBPF profiling
   eBPFProfiling:
     enabled: true
 
+  # Enable kube RBAC proxy
   kubeRBACProxy:
     enabled: true
 
 ceemsAPIServer:
+  # Enable kube RBAC proxy
   kubeRBACProxy:
     enabled: true
 
-  grafana:
-    datasource:
-      create: true
-      scheme: https
-      authHeader:
-        name: Authorization
-        value: "Bearer ${KUBE_RBAC_PROXY_token}"
-      tls:
-        skipVerify: true
-
-  clusters:
-    - id: myk8s-kube-rbac-proxy
-      manager: k8s
-      updaters:
-        - myk8s-kube-rbac-proxy-tsdb
-
-  updaters:
-    - id: myk8s-kube-rbac-proxy-tsdb
-      updater: tsdb
-      web:
-        url: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "kube-ceems.api-server.namespace" . }}:10090
-        authorization:
-          type: Bearer
-          credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        tls_config:
-          insecure_skip_verify: true
+  # A role to be able to query Prometheus
+  # that is behind kube RBAC proxy
   rbac:
     extraClusterRoleRules:
       - apiGroups: [""]
@@ -46,14 +41,65 @@ ceemsAPIServer:
           - services/ceems-kube-ceems-prometheus
         verbs: ["get"]
 
+  grafana:
+    datasource:
+      create: true
+      # Kube RBAC proxy uses HTTPS
+      scheme: https
+      # Auth header that is needed for making request.
+      # A long lived token must be mounted on Grafana container
+      # with necessary RBAC roles. This token is exported in
+      # env vars with `KUBE_RBAC_PROXY` prefix.
+      authHeader:
+        name: Authorization
+        value: "Bearer ${KUBE_RBAC_PROXY_token}"
+      tls:
+        skipVerify: true
+
+  # CEEMS API server's clusters config
+  clusters:
+    - id: myk8s-kube-rbac-proxy
+      manager: k8s
+      updaters:
+        - myk8s-kube-rbac-proxy-tsdb
+
+  # CEEMS API server's updaters config
+  updaters:
+    - id: myk8s-kube-rbac-proxy-tsdb
+      updater: tsdb
+      web:
+        url: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "kube-ceems.api-server.namespace" . }}:10090
+        # As CEEMS API server has necessary cluster role, we need to
+        # use the token of service account to query Prometheus behind kube RBAC proxy
+        authorization:
+          type: Bearer
+          credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        tls_config:
+          insecure_skip_verify: true
+
 ceemsLB:
+  # Enable kube RBAC proxy
   kubeRBACProxy:
     enabled: true
+
+  # A role to be able to query Prometheus
+  # that is behind kube RBAC proxy
+  rbac:
+    extraClusterRoleRules:
+      - apiGroups: [""]
+        resources:
+          - services/ceems-kube-ceems-prometheus
+        verbs: ["get"]
 
   grafana:
     datasource:
       create: true
+      # Kube RBAC proxy uses HTTPS
       scheme: https
+      # Auth header that is needed for making request.
+      # A long lived token must be mounted on Grafana container
+      # with necessary RBAC roles. This token is exported in
+      # env vars with `KUBE_RBAC_PROXY` prefix.
       authHeader:
         name: Authorization
         value: "Bearer ${KUBE_RBAC_PROXY_token}"
@@ -66,7 +112,11 @@ ceemsLB:
       - id: myk8s-kube-rbac-proxy
         tsdb:
           - web:
+              # Prometheus server is exposed on non default 10090 port which is configured
+              # as upstream port on kube RBAC proxy.
               url: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "kube-ceems.lb.namespace" . }}:10090
+              # As CEEMS LB has necessary cluster role, we need to
+              # use the token of service account to query Prometheus behind kube RBAC proxy
               authorization:
                 type: Bearer
                 credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
@@ -76,25 +126,42 @@ ceemsLB:
           - web:
               url: http://{{ include "kube-ceems.pyroscope.fullname" . }}.{{ include "kube-ceems.namespace" . }}:4040
 
-  rbac:
-    extraClusterRoleRules:
-      - apiGroups: [""]
-        resources:
-          - services/ceems-kube-ceems-prometheus
-        verbs: ["get"]
-
 kube-prometheus-stack:
+  # Setup RBAC config for kube RBAC proxy for Prometheus.
+  extraManifests:
+    - |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: kube-ceems-prometheus-rbac-config
+        namespace: {{ include "kube-ceems.namespace" . }}
+      data:
+        config-file.yaml: |+
+          authorization:
+            resourceAttributes:
+              namespace: {{ include "kube-ceems.namespace" . }}
+              apiVersion: v1
+              resource: services
+              subresource: ceems-kube-ceems-prometheus
+              name: ceems-kube-ceems-prometheus
+
   prometheus:
+    # External facing port of Prometheus web server
     service:
       port: 10090
       targetPort: 10090
+
     prometheusSpec:
+      # Listen only on localhost so all requests must be passed through kube RBAC proxy
       listenLocal: true
+      # Setup external URL which is different from default
       externalUrl: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" . }}-prometheus.{{ template "kube-prometheus-stack.namespace" . }}:10090
+      # Mount kube RBAC proxy role
       volumes:
         - name: kube-rbac-proxy-config
           configMap:
             name: kube-ceems-prometheus-rbac-config
+      # Setup kube RBAC proxy container
       containers:
         - name: kube-rbac-proxy
           args:
@@ -124,30 +191,46 @@ kube-prometheus-stack:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           volumeMounts:
-          - name: kube-rbac-proxy-config
-            mountPath: /etc/kube-rbac-proxy-config
-
-  extraManifests:
-    - |
-      apiVersion: v1
-      kind: ConfigMap
-      metadata:
-        name: kube-ceems-prometheus-rbac-config
-        namespace: {{ include "kube-ceems.namespace" . }}
-      data:
-        config-file.yaml: |+
-          authorization:
-            resourceAttributes:
-              namespace: {{ include "kube-ceems.namespace" . }}
-              apiVersion: v1
-              resource: services
-              subresource: ceems-kube-ceems-prometheus
-              name: ceems-kube-ceems-prometheus
+            - name: kube-rbac-proxy-config
+              mountPath: /etc/kube-rbac-proxy-config
 
   grafana:
+    # Add cluster roles that allows Grafana to query
+    # CEEMs components and Prometheus which are all behind
+    # kube RBAC proxy
+    rbac:
+      extraClusterRoleRules:
+        - apiGroups: [""]
+          resources:
+            - services/ceems-kube-ceems-api-server
+            - services/ceems-kube-ceems-lb
+            - services/ceems-kube-ceems-prometheus
+          verbs: ["get"]
+
+    # Setup a long lived token. This is due to the limitation
+    # of Grafana provisioned datasources cannot read header
+    # values from files.
+    extraObjects:
+      - |
+        apiVersion: v1
+        kind: Secret
+        type: kubernetes.io/service-account-token
+        metadata:
+          name: grafana-svc-token
+          annotations:
+            kubernetes.io/service-account.name: {{ include "grafana.serviceAccountName" . }}
+
+    # Export the long lived token created into Grafana container
+    envFromSecrets:
+      - name: grafana-svc-token
+        prefix: KUBE_RBAC_PROXY_
+
     sidecar:
       datasources:
+        # Disable default datasource as it does not support TLS nor Authorization.
         defaultDatasourceEnabled: false
+
+    # Provide Prometheus datasource manually with Authorization header configured
     additionalDataSources:
       - name: CEEMS-Prometheus
         type: prometheus
@@ -159,26 +242,7 @@ kube-prometheus-stack:
           httpHeaderName1: Authorization
         secureJsonData:
           httpHeaderValue1: "Bearer ${KUBE_RBAC_PROXY_token}"
-    rbac:
-      extraClusterRoleRules:
-        - apiGroups: [""]
-          resources:
-            - services/ceems-kube-ceems-api-server
-            - services/ceems-kube-ceems-lb
-            - services/ceems-kube-ceems-prometheus
-          verbs: ["get"]
-    envFromSecrets:
-      - name: grafana-svc-token
-        prefix: KUBE_RBAC_PROXY_
-    extraObjects:
-      - |
-        apiVersion: v1
-        kind: Secret
-        type: kubernetes.io/service-account-token
-        metadata:
-          name: grafana-svc-token
-          annotations:
-            kubernetes.io/service-account.name: {{ include "grafana.serviceAccountName" . }}
 
+# Enable Pyroscope server
 pyroscopeServer:
   enabled: true

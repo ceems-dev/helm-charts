@@ -1,1 +1,5 @@
 ---
+
+# This scenario uses default values of chart to deploy kube-ceems.
+# NOTE that there is no protection to CEEMS components, Prometheus
+# and Grafana in this "Quick Start Mode".
