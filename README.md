@@ -1,5 +1,7 @@
 # CEEMS Kubernetes Helm Charts
 
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/ceems)](https://artifacthub.io/packages/search?org=ceems) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) ![Release Charts](https://github.com/ceems-dev/helm-charts/actions/workflows/release.yaml/badge.svg?branch=main) [![Releases downloads](https://img.shields.io/github/downloads/ceems-dev/helm-charts/total.svg)](https://github.com/ceems-dev/helm-charts/releases)
+
 Helm charts to install [CEEMS](https://github.com/ceems-dev/ceems/)
 components along with Prometheus and Grafana for complete monitoring stack.
 
