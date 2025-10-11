@@ -83,6 +83,28 @@
 			"schedule": [
 				"* 14-17 * * 2,5"
 			]
-		}
+		},
+		{
+      "description": "CEEMS major/minor updates should result in a major/minor bumps of the chart version.",
+      "enabled": true,
+      "matchPackageNames": [
+        "ceems-dev/ceems"
+      ],
+      "bumpVersions": [
+        {
+          "name": "Updating Chart version",
+          "filePatterns": ["/^({{#each (distinct (lookupArray upgrades \"packageFileDir\"))}}{{{lookup (split . \"/\") 0}}}/{{{lookup (split . \"/\") 1}}}{{#unless @last}}|{{/unless}}{{/each}})/Chart\\.ya?ml$/"],
+          "matchStrings": ["(?:^|\\n)version:\\s\"?(?<version>\\d+\\.\\d+\\.\\d+)\"?(?:$|\\n)"],
+          "bumpType": "{{#if (or isPinDigest isPatch)}}patch{{else}}{{#if isMinor}}minor{{else}}major{{/if}}{{/if}}"
+        }
+      ]
+    },
+		{
+      "matchPackageNames": ["actions/python-versions", "python"],
+      "matchDepTypes": [
+        "uses-with"
+      ],
+      "allowedVersions": "<=3.13"
+    }
 	]
 }
