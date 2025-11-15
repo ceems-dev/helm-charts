@@ -18,7 +18,7 @@ helm repo add ceems-dev https://ceems-dev.github.io/helm-charts
 
 You can then run `helm search repo ceems-dev` to see the charts.
 
-OCI artifacts of all Prometheus Helm charts are available in
+OCI artifacts of all CEEMS Helm charts are available in
 [ghcr.io](https://github.com/orgs/ceems-dev/packages?repo_name=helm-charts).
 
 ## Contributing
