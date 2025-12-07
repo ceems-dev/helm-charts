@@ -71,6 +71,9 @@ jobs:
           RUNNER_IP=$(ip -o route get to 8.8.8.8 | sed -n 's/.*src \([0-9.]\+\).*/\1/p')
           sed -i "s/RUNNER_IP/${RUNNER_IP}/g" charts/kube-ceems/ci/09-with-redfish-proxy-values.yaml
 
+          # Set perf_event_paranoid parameter to 0 for eBPF stuff to work
+          sudo sysctl -w kernel.perf_event_paranoid=0
+
       - name: Apply Gateway API CRDs
         if: steps.list-changed.outputs.changed == 'true'
         run: kubectl apply -k https://github.com/kubernetes-sigs/gateway-api/config/crd
