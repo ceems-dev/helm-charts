@@ -39,7 +39,7 @@ annotations:
       url: https://github.com/ceems-dev/ceems
 dependencies:
   - name: kube-prometheus-stack
-    version: "79.6.*"
+    version: "80.0.*"
     repository: https://prometheus-community.github.io/helm-charts
     condition: kubePrometheusStack.enabled
     import-values:

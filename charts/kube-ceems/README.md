@@ -23,7 +23,7 @@ A Helm chart for deploying CEEMS
 | Repository | Name | Version |
 |------------|------|---------|
 | https://grafana.github.io/helm-charts | pyroscope | 1.16.0 |
-| https://prometheus-community.github.io/helm-charts | kube-prometheus-stack | 79.6.* |
+| https://prometheus-community.github.io/helm-charts | kube-prometheus-stack | 80.0.* |
 
 <!-- textlint-enable -->
 
