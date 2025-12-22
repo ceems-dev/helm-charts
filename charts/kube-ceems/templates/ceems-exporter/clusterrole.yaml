@@ -21,7 +21,7 @@ rules:
   - apiGroups: [ "" ]
     resources:
       - services/{{ template "kube-ceems.redfish-proxy.fullname" . }}
-    verbs: [ "get" ]
+    verbs: [ "get", "create" ]
 {{- end }}
 {{- if .Values.ceemsExporter.collectors.k8s.enabled }}
   - apiGroups: [ "" ]

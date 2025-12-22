@@ -26,3 +26,6 @@ no-hard-tabs: false
 
 # Allow blanks-around-fences
 blanks-around-fences: false
+
+# Allow compact style
+table-column-style: false
