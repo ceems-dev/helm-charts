@@ -22,7 +22,7 @@ jobs:
         uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
         with:
           # renovate: github=helm/helm
-          version: v4.0.1
+          version: v4.0.4
 
       - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
         with:
@@ -71,6 +71,9 @@ jobs:
           RUNNER_IP=$(ip -o route get to 8.8.8.8 | sed -n 's/.*src \([0-9.]\+\).*/\1/p')
           sed -i "s/RUNNER_IP/${RUNNER_IP}/g" charts/kube-ceems/ci/09-with-redfish-proxy-values.yaml
 
+          # Set perf_event_paranoid parameter to 0 for eBPF stuff to work
+          sudo sysctl -w kernel.perf_event_paranoid=0
+
       - name: Apply Gateway API CRDs
         if: steps.list-changed.outputs.changed == 'true'
         run: kubectl apply -k https://github.com/kubernetes-sigs/gateway-api/config/crd
@@ -94,7 +97,7 @@ jobs:
           fetch-depth: 0
 
       - name: Lint Code Base
-        uses: super-linter/super-linter/slim@502f4fe48a81a392756e173e39a861f8c8efe056 # v8.3.0
+        uses: super-linter/super-linter/slim@47984f49b4e87383eed97890fe2dca6063bbd9c3 # v8.3.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: .github/linters
