@@ -2,7 +2,7 @@
 
 # kube-ceems
 
-![Version: 0.22.0](https://img.shields.io/badge/Version-0.22.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.12.0](https://img.shields.io/badge/AppVersion-0.12.0-informational?style=flat-square)
+![Version: 0.22.1](https://img.shields.io/badge/Version-0.22.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.12.1](https://img.shields.io/badge/AppVersion-0.12.1-informational?style=flat-square)
 
 A Helm chart for deploying CEEMS
 
@@ -23,7 +23,7 @@ A Helm chart for deploying CEEMS
 | Repository | Name | Version |
 |------------|------|---------|
 | https://grafana.github.io/helm-charts | pyroscope | 1.16.0 |
-| https://prometheus-community.github.io/helm-charts | kube-prometheus-stack | 80.0.* |
+| https://prometheus-community.github.io/helm-charts | kube-prometheus-stack | 80.6.* |
 
 <!-- textlint-enable -->
 
@@ -1065,7 +1065,7 @@ string
 			<td>
 				<div style="max-width: 250px;">
 <pre lang="json">
-"v0.20.0"
+"v0.20.1"
 </pre>
 </div>
 			</td>
@@ -4554,7 +4554,7 @@ string
 			<td>
 				<div style="max-width: 250px;">
 <pre lang="json">
-"v1.6.4"
+"v1.6.5"
 </pre>
 </div>
 			</td>
@@ -5317,7 +5317,7 @@ string
 			<td>
 				<div style="max-width: 250px;">
 <pre lang="json">
-"v0.20.0"
+"v0.20.1"
 </pre>
 </div>
 			</td>
@@ -7283,7 +7283,7 @@ string
 			<td>
 				<div style="max-width: 250px;">
 <pre lang="json">
-"v0.20.0"
+"v0.20.1"
 </pre>
 </div>
 			</td>
@@ -8847,7 +8847,7 @@ string
 			<td>
 				<div style="max-width: 250px;">
 <pre lang="json">
-"v0.20.0"
+"v0.20.1"
 </pre>
 </div>
 			</td>
