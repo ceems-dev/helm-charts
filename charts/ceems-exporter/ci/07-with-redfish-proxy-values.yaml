@@ -1,0 +1,44 @@
+---
+# This scenario shows how to enable redfish collector and redfish proxy
+# to monitor redfish API servers.
+#
+# NOTE that `redfishProxy` must be deployed on a management node that
+# has network access to redfish API servers.
+
+collectors:
+  redfish:
+    # Enable redfish collector
+    enabled: true
+    # List chassis names of redfish that report
+    # power consumption of host alone.
+    chassisNames:
+      - Chassis_1
+    # Configuration for redfish collector.
+    config:
+      protocol: http
+      # This hostname must be the name under which
+      # Redfish API server is reachable. For instance,
+      # if hostname is `node-0` and Redfish is reachable
+      # on `node-0-bmc`, then `hostname` can be configured
+      # to use `{hostname}-bmc` and at runtime, the `{hostname}`
+      # will be replaced by the node name.
+      #
+      # However, if the nodes can communicate with redfish API
+      # server directly or `redfishProxy` is enabled, we need
+      # to ensure that DNS can resolve `node-0-bmc` to redfish
+      # API server IP address.
+      hostname: RUNNER_IP
+      port: 5000
+      # Credentials for Redfish API server
+      username: admin
+      password: somesupersecret
+
+redfishProxy:
+  enabled: true
+
+  # Enable kube RBAC proxy. When enabled,
+  # the Redfish collector config will be
+  # automatically modified to include the
+  # auth token in the requests.
+  kubeRBACProxy:
+    enabled: true

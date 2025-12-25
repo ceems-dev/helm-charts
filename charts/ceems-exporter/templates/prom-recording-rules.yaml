@@ -1,0 +1,994 @@
+{{- if .Values.prometheus.defaultRules.create }}
+{{- $chassis := "" }}
+{{- $chip := "" }}
+{{- $cpuPowerMetricFound := true }}
+{{- $ceemsPowerSourceLabelName := "ceemspowersources" }}
+{{- $ceemsPowerSourceLabelValue := "" }}
+{{- if .Values.collectors.redfish.enabled }}
+{{- if not .Values.collectors.redfish.chassisNames }}
+{{- fail "Atleast one chassisName that reports power usage of host must be provided when redfish collector is enabled" }}
+{{- end }}
+{{- $chassis = .Values.collectors.redfish.chassisNames | join "|" }}
+{{- end }}
+{{- if .Values.collectors.hwmon.enabled }}
+{{- if not .Values.collectors.hwmon.chipNames }}
+{{- fail "Atleast one chipName that reports power usage of host must be provided when hwmon collector is enabled" }}
+{{- end }}
+{{- $chip = .Values.collectors.hwmon.chipNames | join "|" }}
+{{- end }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "ceems-exporter.fullname" . }}-prom-recording-rules
+  labels:
+    {{- include "ceems-exporter.labels" . | nindent 4 }}
+{{- if .Values.prometheus.defaultRules.labels }}
+{{ toYaml .Values.prometheus.defaultRules.labels | nindent 4 }}
+{{- end }}
+{{- if .Values.prometheus.defaultRules.annotations }}
+  annotations:
+{{ toYaml .Values.prometheus.defaultRules.annotations | nindent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: host-cpu-mem-usage-rules
+    rules:
+      - record: uuid:ceems_cpu_usage:ratio_irate
+        expr: |2
+          (
+              irate(ceems_compute_unit_cpu_user_seconds_total[1m])
+            +
+              irate(ceems_compute_unit_cpu_system_seconds_total[1m])
+          ) * 100
+          /
+            (ceems_compute_unit_cpus > 0)
+      - record: uuid:ceems_cpu_memory_usage:ratio
+        expr: |2
+          ceems_compute_unit_memory_used_bytes * 100
+          /
+          (ceems_compute_unit_memory_total_bytes > 0)
+      - record: job:ceems_cpu_usage:avg_ratio_irate
+        expr: |2
+          avg by (job) (
+            (
+                  sum by (job, instance) (
+                    irate(ceems_cpu_seconds_total{mode!~"idle|iowait|steal"}[1m])
+                  )
+                *
+                  100
+              / on (instance) group_left ()
+                ((ceems_cpu_count > 0) / ceems_cpu_per_core_count)
+            )
+          )
+      - record: job:ceems_cpu_memory_usage:avg_ratio
+        expr: |2
+          avg by (job) (
+              (
+                (
+                    1
+                  -
+                    (ceems_meminfo_MemAvailable_bytes / ceems_meminfo_MemTotal_bytes)
+                )
+              )
+            )
+          *
+            100
+{{- if has "--collector.ebpf.io-metrics" .Values.extraArgs }}
+  - name: io-usage-rules
+    rules:
+      - record: uuid:ceems_io_read_bytes:irate
+        expr: irate(ceems_ebpf_read_bytes_total[1m])
+      - record: uuid:ceems_io_read_requests:irate
+        expr: irate(ceems_ebpf_read_requests_total[1m])
+      - record: uuid:ceems_io_read_errors:irate
+        expr: irate(ceems_ebpf_read_errors_total[1m])
+      - record: uuid:ceems_io_write_bytes:irate
+        expr: irate(ceems_ebpf_write_bytes_total[1m])
+      - record: uuid:ceems_io_write_requests:irate
+        expr: irate(ceems_ebpf_write_requests_total[1m])
+      - record: uuid:ceems_io_write_errors:irate
+        expr: irate(ceems_ebpf_write_errors_total[1m])
+      - record: job:ceems_io_read_bytes:sum_irate
+        expr: |2
+          sum by (job, mountpoint) (
+            sum by (job, mountpoint, instance) (irate(ceems_ebpf_read_bytes_total[1m]))
+          )
+      - record: job:ceems_io_read_requests:sum_irate
+        expr: |2
+          sum by (job, mountpoint) (
+            sum by (job, mountpoint, instance) (irate(ceems_ebpf_read_requests_total[1m]))
+          )
+      - record: job:ceems_io_read_errors:sum_irate
+        expr: |2
+          sum by (job, mountpoint) (
+            sum by (job, mountpoint, instance) (irate(ceems_ebpf_read_errors_total[1m]))
+          )      
+      - record: job:ceems_io_write_bytes:sum_irate
+        expr: |2
+          sum by (job, mountpoint) (
+            sum by (job, mountpoint, instance) (irate(ceems_ebpf_write_bytes_total[1m]))
+          )
+      - record: job:ceems_io_write_requests:sum_irate
+        expr: |2
+          sum by (job, mountpoint) (
+            sum by (job, mountpoint, instance) (irate(ceems_ebpf_write_requests_total[1m]))
+          )
+      - record: job:ceems_io_write_errors:sum_irate
+        expr: |2
+          sum by (job, mountpoint) (
+            sum by (job, mountpoint, instance) (irate(ceems_ebpf_write_errors_total[1m]))
+          )
+{{- end }}
+{{- if has "--collector.ebpf.network-metrics" .Values.extraArgs }}
+  - name: network-usage-rules
+    rules:
+      - record: uuid:ceems_net_ingress_bytes:irate
+        expr: irate(ceems_ebpf_ingress_bytes_total[1m])
+      - record: uuid:ceems_net_ingress_packets:irate
+        expr: irate(ceems_ebpf_ingress_packets_total[1m])
+      - record: uuid:ceems_net_egress_bytes:irate
+        expr: irate(ceems_ebpf_egress_bytes_total[1m])
+      - record: uuid:ceems_net_egress_packets:irate
+        expr: irate(ceems_ebpf_egress_packets_total[1m])
+      - record: job:ceems_net_ingress_bytes:sum_irate
+        expr: |2
+          sum by (job, family, proto) (
+            sum by (job, family, proto, instance) (irate(ceems_ebpf_ingress_bytes_total[1m]))
+          )
+      - record: job:ceems_net_ingress_packets:sum_irate
+        expr: |2
+          sum by (job, family, proto) (
+            sum by (job, family, proto, instance) (irate(ceems_ebpf_ingress_packets_total[1m]))
+          )
+      - record: job:ceems_net_egress_bytes:sum_irate
+        expr: |2
+          sum by (job, family, proto) (
+            sum by (job, family, proto, instance) (irate(ceems_ebpf_egress_bytes_total[1m]))
+          )      
+      - record: job:ceems_net_egress_packets:sum_irate
+        expr: |2
+          sum by (job, family, proto) (
+            sum by (job, family, proto, instance) (irate(ceems_ebpf_egress_packets_total[1m]))
+          )
+{{- end }}
+{{- if .Values.collectors.crayPMC.enabled }}
+{{- $ceemsPowerSourceLabelValue = "cray" }}
+  - name: cray-power-usage-rules
+    rules:
+      - record: instance:ceems_cray_pm_counters_power_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: {{ .Values.prometheus.defaultRules.pue }} * ceems_cray_pm_counters_power_watts
+      - record: uuid:ceems_host_power_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: |2
+            instance:ceems_cray_pm_counters_power_watts:pue{domain="cpu"}
+              * on (instance) group_right ()
+                (
+                      (
+                          (
+                              irate(ceems_compute_unit_cpu_user_seconds_total[1m])
+                            +
+                              irate(ceems_compute_unit_cpu_system_seconds_total[1m])
+                          )
+                        / on (instance) group_left ()
+                          sum by (instance) (irate(ceems_cpu_seconds_total{mode!~"idle|iowait|steal"}[1m]))
+                      )
+                    >
+                      0
+                  or on (instance)
+                    (ceems_compute_unit_cpu_user_seconds_total * 0)
+                )
+            +
+                instance:ceems_cray_pm_counters_power_watts:pue{domain="memory"}
+              * on (instance) group_right ()
+                (
+                      (
+                          ceems_compute_unit_memory_used_bytes
+                        / on (instance) group_left ()
+                          (ceems_meminfo_MemTotal_bytes - on (instance) ceems_meminfo_MemAvailable_bytes)
+                      )
+                    >
+                      0
+                  or on (instance)
+                    (ceems_compute_unit_memory_used_bytes * 0)
+                )
+          +
+              (
+                  instance:ceems_cray_pm_counters_power_watts:pue{domain="node"}
+                - on (instance)
+                  sum by (instance) (instance:ceems_cray_pm_counters_power_watts:pue{domain!~"node"})
+              )
+            * on (instance) group_right ()
+              (
+                    ceems_compute_unit_memory_used_bytes
+                  /
+                    (ceems_compute_unit_memory_used_bytes * on (instance) group_left () ceems_compute_units)
+                >
+                  0
+              )
+      - record: job:ceems_host_power_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: |2
+          sum by (job) (
+              (
+                  instance:ceems_cray_pm_counters_power_watts:pue{domain="node"}
+                - on (instance) group_left ()
+                  sum by (instance) (instance:ceems_cray_pm_counters_power_watts:pue{domain=~"accel.*"})
+              )
+          )
+{{- else if .Values.collectors.redfish.enabled }}
+{{- $ceemsPowerSourceLabelValue = "redfish-rapl" }}
+  - name: redfish-power-usage-rules
+    rules:
+      - record: instance:ceems_redfish_power_current_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: {{ .Values.prometheus.defaultRules.pue }} * sum without (chassis) (ceems_redfish_power_current_watts{chassis=~"{{ $chassis }}"})
+      - record: uuid:ceems_host_power_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: |2
+            0.9 * instance:ceems_redfish_power_current_watts:pue # Assumption 90% Power usage by CPU, CPU memory and other peripherals.
+                * on (instance) group_left () # 0.9 * Total Power * (RAPL Package / (RAPL Package + RAPL DRAM)) -> Total CPU Power
+                  (
+                      (
+                          sum by (instance) (irate(ceems_rapl_package_joules_total[1m]))
+                        /
+                          (
+                              sum by (instance) (irate(ceems_rapl_package_joules_total[1m]))
+                            +
+                              sum by (instance) (irate(ceems_rapl_dram_joules_total[1m]))
+                          )
+                      )
+                    >
+                      0
+                  or
+                    sum by (instance) (
+                      instance:ceems_redfish_power_current_watts:pue / instance:ceems_redfish_power_current_watts:pue
+                    )
+                )
+              * on (instance) group_right () # Total CPU Power * (Compute CPU Time / Total CPU Time) -> Compute Unit CPU Power
+                (
+                      (
+                          (
+                              irate(ceems_compute_unit_cpu_user_seconds_total[1m])
+                            +
+                              irate(ceems_compute_unit_cpu_system_seconds_total[1m])
+                          )
+                        / on (instance) group_left ()
+                          sum by (instance) (irate(ceems_cpu_seconds_total{mode!~"idle|iowait|steal"}[1m]))
+                      )
+                    >
+                      0
+                  or on (instance)
+                    ceems_compute_unit_cpu_user_seconds_total * 0
+                )
+            +
+                  0.9 * instance:ceems_redfish_power_current_watts:pue
+                * on (instance) group_left () # 0.9 * Total Power * (RAPL DRAM / (RAPL Package + RAPL DRAM)) -> Total CPU Memory Power
+                  (
+                      (
+                          sum by (instance) (irate(ceems_rapl_dram_joules_total[1m]))
+                        /
+                          (
+                              sum by (instance) (irate(ceems_rapl_package_joules_total[1m]))
+                            +
+                              sum by (instance) (irate(ceems_rapl_dram_joules_total[1m]))
+                          )
+                      )
+                    >
+                      0
+                  or
+                    sum by (instance) (instance:ceems_redfish_power_current_watts:pue * 0)
+                )
+              * on (instance) group_right () # Total CPU Memory Power * (Compute Unit Memory / Total Memory) -> Compute Unit CPU Memory Power
+                (
+                      (
+                          ceems_compute_unit_memory_used_bytes
+                        / on (instance) group_left ()
+                          (ceems_meminfo_MemTotal_bytes - on (instance) ceems_meminfo_MemAvailable_bytes)
+                      )
+                    >
+                      0
+                  or on (instance)
+                    ceems_compute_unit_memory_used_bytes * 0
+                )
+            +
+                0.1 * instance:ceems_redfish_power_current_watts:pue # Total Misc Power Usage
+              * on (instance) group_right () # Total Misc Power usage / Number of Compute Units -> Misc Power Usage by Compute Unit
+                (
+                    ceems_compute_unit_memory_used_bytes
+                  /
+                    (
+                        ceems_compute_unit_memory_used_bytes
+                      * on (instance) group_left ()
+                        ceems_compute_units
+                    ) > 0
+                )
+      - record: job:ceems_host_power_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: sum by (job) (instance:ceems_redfish_power_current_watts:pue)
+{{- else if .Values.collectors.hwmon.enabled }}
+{{- $ceemsPowerSourceLabelValue = "hwmon-rapl" }}
+  - name: hwmon-power-usage-rules
+    rules:
+      - record: instance:ceems_hwmon_power_current_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: {{ .Values.prometheus.defaultRules.pue }} * sum without (sensor) (ceems_hwmon_power_current_watts{chip=~"{{ $chip }}"})
+      - record: uuid:ceems_host_power_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: |2
+            0.9 * instance:ceems_hwmon_power_current_watts:pue # Assumption 90% Power usage by CPU, CPU memory and other peripherals.
+                * on (instance) group_left () # 0.9 * Total Power * (RAPL Package / (RAPL Package + RAPL DRAM)) -> Total CPU Power
+                  (
+                      (
+                          sum by (instance) (irate(ceems_rapl_package_joules_total[1m]))
+                        /
+                          (
+                              sum by (instance) (irate(ceems_rapl_package_joules_total[1m]))
+                            +
+                              sum by (instance) (irate(ceems_rapl_dram_joules_total[1m]))
+                          )
+                      )
+                    >
+                      0
+                  or
+                    sum by (instance) (
+                      instance:ceems_hwmon_power_current_watts:pue / instance:ceems_hwmon_power_current_watts:pue
+                    )
+                )
+              * on (instance) group_right () # Total CPU Power * (Compute CPU Time / Total CPU Time) -> Compute Unit CPU Power
+                (
+                      (
+                          (
+                              irate(ceems_compute_unit_cpu_user_seconds_total[1m])
+                            +
+                              irate(ceems_compute_unit_cpu_system_seconds_total[1m])
+                          )
+                        / on (instance) group_left ()
+                          sum by (instance) (irate(ceems_cpu_seconds_total{mode!~"idle|iowait|steal"}[1m]))
+                      )
+                    >
+                      0
+                  or on (instance)
+                    ceems_compute_unit_cpu_user_seconds_total * 0
+                )
+            +
+                  0.9 * instance:ceems_hwmon_power_current_watts:pue
+                * on (instance) group_left () # 0.9 * Total Power * (RAPL DRAM / (RAPL Package + RAPL DRAM)) -> Total CPU Memory Power
+                  (
+                      (
+                          sum by (instance) (irate(ceems_rapl_dram_joules_total[1m]))
+                        /
+                          (
+                              sum by (instance) (irate(ceems_rapl_package_joules_total[1m]))
+                            +
+                              sum by (instance) (irate(ceems_rapl_dram_joules_total[1m]))
+                          )
+                      )
+                    >
+                      0
+                  or
+                    sum by (instance) (instance:ceems_hwmon_power_current_watts:pue * 0)
+                )
+              * on (instance) group_right () # Total CPU Memory Power * (Compute Unit Memory / Total Memory) -> Compute Unit CPU Memory Power
+                (
+                      (
+                          ceems_compute_unit_memory_used_bytes
+                        / on (instance) group_left ()
+                          (ceems_meminfo_MemTotal_bytes - on (instance) ceems_meminfo_MemAvailable_bytes)
+                      )
+                    >
+                      0
+                  or on (instance)
+                    ceems_compute_unit_memory_used_bytes * 0
+                )
+            +
+                0.1 * instance:ceems_hwmon_power_current_watts:pue # Total Misc Power Usage
+              * on (instance) group_right () # Total Misc Power usage / Number of Compute Units -> Misc Power Usage by Compute Unit
+                (
+                    ceems_compute_unit_memory_used_bytes
+                  /
+                    (
+                        ceems_compute_unit_memory_used_bytes
+                      * on (instance) group_left ()
+                        ceems_compute_units
+                    ) > 0
+                )
+      - record: job:ceems_host_power_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: sum by (job) (instance:ceems_hwmon_power_current_watts:pue)
+{{- else if .Values.collectors.ipmi.enabled }}
+{{- $ceemsPowerSourceLabelValue = "ipmi-rapl" }}
+  - name: ipmi-power-usage-rules
+    rules:
+      - record: instance:ceems_ipmi_dcmi_power_current_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: {{ .Values.prometheus.defaultRules.pue }} * ceems_ipmi_dcmi_power_current_watts
+      - record: uuid:ceems_host_power_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: |2
+            0.9 * instance:ceems_ipmi_dcmi_power_current_watts:pue # Assumption 90% Power usage by CPU, CPU memory and other peripherals.
+                * on (instance) group_left () # 0.9 * Total Power * (RAPL Package / (RAPL Package + RAPL DRAM)) -> Total CPU Power
+                  (
+                      (
+                          sum by (instance) (irate(ceems_rapl_package_joules_total[1m]))
+                        /
+                          (
+                              sum by (instance) (irate(ceems_rapl_package_joules_total[1m]))
+                            +
+                              sum by (instance) (irate(ceems_rapl_dram_joules_total[1m]))
+                          )
+                      )
+                    >
+                      0
+                  or
+                    sum by (instance) (
+                      instance:ceems_ipmi_dcmi_power_current_watts:pue / instance:ceems_ipmi_dcmi_power_current_watts:pue
+                    )
+                )
+              * on (instance) group_right () # Total CPU Power * (Compute CPU Time / Total CPU Time) -> Compute Unit CPU Power
+                (
+                      (
+                          (
+                              irate(ceems_compute_unit_cpu_user_seconds_total[1m])
+                            +
+                              irate(ceems_compute_unit_cpu_system_seconds_total[1m])
+                          )
+                        / on (instance) group_left ()
+                          sum by (instance) (irate(ceems_cpu_seconds_total{mode!~"idle|iowait|steal"}[1m]))
+                      )
+                    >
+                      0
+                  or on (instance)
+                    ceems_compute_unit_cpu_user_seconds_total * 0
+                )
+            +
+                  0.9 * instance:ceems_ipmi_dcmi_power_current_watts:pue
+                * on (instance) group_left () # 0.9 * Total Power * (RAPL DRAM / (RAPL Package + RAPL DRAM)) -> Total CPU Memory Power
+                  (
+                      (
+                          sum by (instance) (irate(ceems_rapl_dram_joules_total[1m]))
+                        /
+                          (
+                              sum by (instance) (irate(ceems_rapl_package_joules_total[1m]))
+                            +
+                              sum by (instance) (irate(ceems_rapl_dram_joules_total[1m]))
+                          )
+                      )
+                    >
+                      0
+                  or
+                    sum by (instance) (instance:ceems_ipmi_dcmi_power_current_watts:pue * 0)
+                )
+              * on (instance) group_right () # Total CPU Memory Power * (Compute Unit Memory / Total Memory) -> Compute Unit CPU Memory Power
+                (
+                      (
+                          ceems_compute_unit_memory_used_bytes
+                        / on (instance) group_left ()
+                          (ceems_meminfo_MemTotal_bytes - on (instance) ceems_meminfo_MemAvailable_bytes)
+                      )
+                    >
+                      0
+                  or on (instance)
+                    ceems_compute_unit_memory_used_bytes * 0
+                )
+            +
+                0.1 * instance:ceems_ipmi_dcmi_power_current_watts:pue # Total Misc Power Usage
+              * on (instance) group_right () # Total Misc Power usage / Number of Compute Units -> Misc Power Usage by Compute Unit
+                (
+                    ceems_compute_unit_memory_used_bytes
+                  /
+                    (
+                        ceems_compute_unit_memory_used_bytes
+                      * on (instance) group_left ()
+                        ceems_compute_units
+                    ) > 0
+                )
+      - record: job:ceems_host_power_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: sum by (job) (instance:ceems_ipmi_dcmi_power_current_watts:pue)
+{{- else if .Values.collectors.rapl.enabled }}
+{{- $ceemsPowerSourceLabelValue = "rapl" }}
+  - name: rapl-power-usage-rules
+    rules:
+      - record: instance:ceems_rapl_package_joules_total:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: {{ .Values.prometheus.defaultRules.pue }} * ceems_rapl_package_joules_total
+      - record: instance:ceems_rapl_dram_joules_total:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: {{ .Values.prometheus.defaultRules.pue }} * ceems_rapl_dram_joules_total
+      - record: uuid:ceems_host_power_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: |2
+          (
+                sum by (instance) (irate(instance:ceems_rapl_package_joules_total:pue[1m]))
+              * on (instance) group_right ()
+                (
+                      (
+                          (
+                              irate(ceems_compute_unit_cpu_user_seconds_total[1m])
+                            +
+                              irate(ceems_compute_unit_cpu_system_seconds_total[1m])
+                          )
+                        / on (instance) group_left ()
+                          sum by (instance) (irate(ceems_cpu_seconds_total{mode!~"idle|iowait|steal"}[1m]))
+                      )
+                    >
+                      0
+                  or on (instance)
+                    (ceems_compute_unit_cpu_user_seconds_total * 0)
+                )
+            +
+                sum by (instance) (irate(instance:ceems_rapl_dram_joules_total:pue[1m]))
+              * on (instance) group_right ()
+                (
+                      (
+                          ceems_compute_unit_memory_used_bytes
+                        / on (instance) group_left ()
+                          (ceems_meminfo_MemTotal_bytes - on (instance) ceems_meminfo_MemAvailable_bytes)
+                      )
+                    >
+                      0
+                  or on (instance)
+                    (ceems_compute_unit_memory_used_bytes * 0)
+                )
+          )
+      - record: job:ceems_host_power_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: |2
+          sum by (job) (
+            (
+                  sum by (instance) (irate(instance:ceems_rapl_package_joules_total:pue[1m]))
+                +
+                  sum by (instance) (irate(instance:ceems_rapl_dram_joules_total:pue[1m]))
+            )
+          )
+{{- else }}
+{{- $cpuPowerMetricFound =  false }}
+{{- end }}
+{{- if and .Values.collectors.emissions.enabled $cpuPowerMetricFound }}
+{{- range $_, $provider := .Values.collectors.emissions.providers }}
+      - record: uuid:ceems_host_emissions_g_s:pue
+        expr: |2
+          label_replace(
+              uuid:ceems_host_power_watts:pue / 3.6e+06,
+              "provider",
+              "{{ $provider }}",
+              "instance",
+              "(.*)"
+            )
+          * on ({{ $ceemsPowerSourceLabelName }}) group_left ()
+            label_replace(
+              ceems_emissions_gCo2_kWh{country_code="{{ $.Values.collectors.emissions.countryCode }}",provider="{{ $provider }}"},
+              "{{ $ceemsPowerSourceLabelName }}",
+              "{{ $ceemsPowerSourceLabelValue }}",
+              "instance",
+              "(.*)"
+            )
+      - record: job:ceems_host_emissions_g_s:pue
+        expr: |2
+          label_replace(
+              job:ceems_host_power_watts:pue / 3.6e+06,
+              "provider",
+              "{{ $provider }}",
+              "instance",
+              "(.*)"
+            )
+          * on ({{ $ceemsPowerSourceLabelName }}) group_left ()
+            label_replace(
+              ceems_emissions_gCo2_kWh{country_code="{{ $.Values.collectors.emissions.countryCode }}",provider="{{ $provider }}"},
+              "{{ $ceemsPowerSourceLabelName }}",
+              "{{ $ceemsPowerSourceLabelValue }}",
+              "instance",
+              "(.*)"
+            )
+{{- end }}
+{{- end }}
+{{- if .Values.prometheus.defaultRules.rules.nvidiaGPU.enabled }}
+{{- $ceemsPowerSourceLabelValue = "nvidia-dcgm" }}
+  - name: nvidia-dcgm-gpu-usage-rules
+    rules:
+      - record: uuid:ceems_gpu_usage:ratio
+        expr: |2
+            label_replace(label_replace(label_replace(DCGM_FI_DEV_GPU_UTIL, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)") * 100
+            * on (gpuuuid,gpuiid,hostname) group_right ()
+            ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_memory_usage:ratio
+        expr: |2
+          (
+              label_replace(label_replace(label_replace(DCGM_FI_DEV_FB_USED, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)") * 100
+            /
+              (
+                  label_replace(label_replace(label_replace(DCGM_FI_DEV_FB_USED, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)") + 
+                  label_replace(label_replace(label_replace(DCGM_FI_DEV_FB_FREE, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)")
+              )
+          )
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: job:ceems_gpu_usage:avg
+        expr: avg by (job) (DCGM_FI_DEV_GPU_UTIL)
+      - record: job:ceems_gpu_memory_usage:avg_ratio
+        expr: |2
+          avg by (job) (
+            (
+                DCGM_FI_DEV_FB_USED * 100
+              /
+                (DCGM_FI_DEV_FB_USED + DCGM_FI_DEV_FB_FREE)
+            )
+          )
+  - name: nvidia-dcgm-gpu-power-usage-rules
+    rules:
+      - record: dev:DCGM_FI_DEV_POWER_USAGE_INSTANT:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: {{ .Values.prometheus.defaultRules.pue }} * label_replace(label_replace(label_replace(DCGM_FI_DEV_POWER_USAGE_INSTANT, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)")
+      - record: uuid:ceems_gpu_power_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: |2
+{{- if .Values.prometheus.defaultRules.rules.nvidiaGPU.profiling }}
+          (
+              (
+                (
+                      label_replace(label_replace(label_replace(DCGM_FI_PROF_SM_ACTIVE, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)")
+                    * on (gpuuuid,gpuiid,hostname)
+                      label_replace(label_replace(label_replace(DCGM_FI_PROF_SM_OCCUPANCY, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)")
+                  * on (gpuuuid, gpuiid,hostname) group_right ()
+                    ceems_compute_unit_gpu_sm_count
+                )
+              )
+            / on (gpuuuid,hostname) group_left ()
+              (
+                sum by (gpuuuid,hostname) (
+                    (
+                          label_replace(label_replace(label_replace(DCGM_FI_PROF_SM_ACTIVE, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)")
+                        * on (gpuuuid,gpuiid,hostname)
+                          label_replace(label_replace(label_replace(DCGM_FI_PROF_SM_OCCUPANCY, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)")
+                      * on (gpuuuid,gpuiid,hostname) group_right ()
+                        ceems_compute_unit_gpu_sm_count
+                    )
+                  >
+                    0
+                )
+              )
+            )
+              * on (gpuuuid,gpuiid,hostname) group_left ()
+                dev:DCGM_FI_DEV_POWER_USAGE_INSTANT:pue
+            * on (gpuuuid,gpuiid,hostname,uuid) group_right ()
+              ceems_compute_unit_gpu_index_flag
+{{- else }}
+          (
+              ceems_compute_unit_gpu_sm_count
+            / on (gpuuuid,hostname) group_left ()
+              (sum by (gpuuuid,hostname) (ceems_compute_unit_gpu_sm_count) > 0)
+          )
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+            dev:DCGM_FI_DEV_POWER_USAGE_INSTANT:pue
+        * on (gpuuuid,gpuiid,hostname,uuid) group_right ()
+          ceems_compute_unit_gpu_index_flag
+{{- end }}
+      - record: job:ceems_gpu_power_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: sum by (job)(dev:DCGM_FI_DEV_POWER_USAGE_INSTANT:pue)
+{{- if .Values.collectors.emissions.enabled }}
+{{- range $_, $provider := .Values.collectors.emissions.providers }}
+      - record: uuid:ceems_gpu_emissions_g_s:pue
+        expr: |2
+          label_replace(
+              uuid:ceems_gpu_power_watts:pue / 3.6e+06,
+              "provider",
+              "{{ $provider }}",
+              "instance",
+              "(.*)"
+            )
+          * on (provider) group_left ()
+          label_replace(
+              ceems_emissions_gCo2_kWh{country_code="{{ $.Values.collectors.emissions.countryCode }}",provider="{{ $provider }}"},
+              "{{ $ceemsPowerSourceLabelName }}",
+              "{{ $ceemsPowerSourceLabelValue }}",
+              "instance",
+              "(.*)"
+            )
+      - record: job:ceems_gpu_emissions_g_s:pue
+        expr: |2
+          label_replace(
+              job:ceems_gpu_power_watts:pue / 3.6e+06,
+              "provider",
+              "{{ $provider }}",
+              "instance",
+              "(.*)"
+            )
+          * on (provider) group_left ()
+          label_replace(
+              ceems_emissions_gCo2_kWh{country_code="{{ $.Values.collectors.emissions.countryCode }}",provider="{{ $provider }}"},
+              "{{ $ceemsPowerSourceLabelName }}",
+              "{{ $ceemsPowerSourceLabelValue }}",
+              "instance",
+              "(.*)"
+            )
+{{- end }}
+{{- end }}
+{{- if .Values.prometheus.defaultRules.rules.nvidiaGPU.profiling }}
+  - name: nvidia-dcgm-gpu-profiling-rules
+    rules:
+      - record: uuid:ceems_gpu_prof_sm_active:ratio
+        expr: |2
+          label_replace(label_replace(label_replace(DCGM_FI_PROF_SM_ACTIVE, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)") * 100
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_sm_occupancy:ratio
+        expr: |2
+          label_replace(label_replace(label_replace(DCGM_FI_PROF_SM_OCCUPANCY, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)") * 100
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_gr_engine_active:ratio
+        expr: |2
+          label_replace(label_replace(label_replace(DCGM_FI_PROF_GR_ENGINE_ACTIVE, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)") * 100
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_pipe_tensor_active:ratio
+        expr: |2
+          label_replace(label_replace(label_replace(DCGM_FI_PROF_PIPE_TENSOR_ACTIVE, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)") * 100
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_pipe_fp64_active:ratio
+        expr: |2
+          label_replace(label_replace(label_replace(DCGM_FI_PROF_PIPE_FP64_ACTIVE, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)") * 100
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_pipe_fp32_active:ratio
+        expr: |2
+          label_replace(label_replace(label_replace(DCGM_FI_PROF_PIPE_FP32_ACTIVE, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)") * 100
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_pipe_fp16_active:ratio
+        expr: |2
+          label_replace(label_replace(label_replace(DCGM_FI_PROF_PIPE_FP16_ACTIVE, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)") * 100
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_dram_active:ratio
+        expr: |2
+          label_replace(label_replace(label_replace(DCGM_FI_PROF_DRAM_ACTIVE, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)") * 100
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_nvlink_tx_bytes:rate
+        expr: |2
+          label_replace(label_replace(label_replace(DCGM_FI_PROF_NVLINK_TX_BYTES, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)")
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_nvlink_rx_bytes:rate
+        expr: |2
+          label_replace(label_replace(label_replace(DCGM_FI_PROF_NVLINK_RX_BYTES, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)")
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_pcie_tx_bytes:rate
+        expr: |2
+          label_replace(label_replace(label_replace(DCGM_FI_PROF_PCIE_TX_BYTES, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)")
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_pcie_rx_bytes:rate
+        expr: |2
+          label_replace(label_replace(label_replace(DCGM_FI_PROF_PCIE_RX_BYTES, "gpuuuid", "$1", "UUID", "(.*)"), "gpuiid", "$1", "GPU_I_ID", "(.*)"), "hostname", "$1", "Hostname", "(.*)")
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      # Average usage for all hosts aggregated by Prometheus job
+      - record: job:ceems_gpu_prof_sm_active:ratio
+        expr: avg by (job) (DCGM_FI_PROF_SM_ACTIVE) * 100
+      - record: job:ceems_gpu_prof_sm_occupancy:ratio
+        expr: avg by (job) (DCGM_FI_PROF_SM_OCCUPANCY) * 100
+      - record: job:ceems_gpu_prof_gr_engine_active:ratio
+        expr: avg by (job) (DCGM_FI_PROF_GR_ENGINE_ACTIVE) * 100
+      - record: job:ceems_gpu_prof_pipe_tensor_active:ratio
+        expr: avg by (job) (DCGM_FI_PROF_PIPE_TENSOR_ACTIVE) * 100
+      - record: job:ceems_gpu_prof_pipe_fp64_active:ratio
+        expr: avg by (job) (DCGM_FI_PROF_PIPE_FP64_ACTIVE) * 100
+      - record: job:ceems_gpu_prof_pipe_fp32_active:ratio
+        expr: avg by (job) (DCGM_FI_PROF_PIPE_FP32_ACTIVE) * 100
+      - record: job:ceems_gpu_prof_pipe_fp16_active:ratio
+        expr: avg by (job) (DCGM_FI_PROF_PIPE_FP16_ACTIVE) * 100
+      - record: job:ceems_gpu_prof_dram_active:ratio
+        expr: avg by (job) (DCGM_FI_PROF_DRAM_ACTIVE) * 100
+      - record: job:ceems_gpu_prof_nvlink_tx_bytes:rate
+        expr: avg by (job) (DCGM_FI_PROF_NVLINK_TX_BYTES)
+      - record: job:ceems_gpu_prof_nvlink_rx_bytes:rate
+        expr: avg by (job) (DCGM_FI_PROF_NVLINK_RX_BYTES)
+      - record: job:ceems_gpu_prof_pcie_tx_bytes:rate
+        expr: avg by (job) (DCGM_FI_PROF_PCIE_TX_BYTES)
+      - record: job:ceems_gpu_prof_pcie_rx_bytes:rate
+        expr: avg by (job) (DCGM_FI_PROF_PCIE_RX_BYTES)
+{{- end }}
+{{- end }}
+{{- if .Values.prometheus.defaultRules.rules.amdGPU.enabled }}
+{{- $ceemsPowerSourceLabelValue = "amd-dev-metrics" }}
+  - name: amd-dev-exporter-gpu-usage-rules
+    rules:
+      - record: uuid:ceems_gpu_usage:ratio
+        expr: |2
+            label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_gfx_activity, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)")
+            * on (gpuuuid,gpuiid,hostname) group_right ()
+            ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_memory_usage:ratio
+        labels:
+          type: vram
+        expr: |2
+          (
+              label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_used_vram, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)") * 100
+            /
+              label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_total_vram, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)") > 0
+          )
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_memory_usage:ratio
+        labels:
+          type: gtt
+        expr: |2
+          (
+              label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_used_gtt, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)") * 100
+            /
+              label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_total_gtt, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)") > 0
+          )
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_memory_usage:ratio
+        labels:
+          type: visiblevram
+        expr: |2
+          (
+              label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_used_visible_vram, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)") * 100
+            /
+              label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_total_visible_vram, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)") > 0
+          )
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: job:ceems_gpu_usage:avg
+        expr: avg by (job) ({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_gfx_activity)
+      - record: job:ceems_gpu_memory_usage:avg_ratio
+        labels:
+          type: vram
+        expr: avg by (job) (({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_used_vram * 100 / {{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_total_vram > 0))
+      - record: job:ceems_gpu_memory_usage:avg_ratio
+        labels:
+          type: gtt
+        expr: avg by (job) (({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_used_gtt * 100 / {{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_total_gtt > 0))
+      - record: job:ceems_gpu_memory_usage:avg_ratio
+        labels:
+          type: visiblevram
+        expr: avg by (job) (({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_used_visible_ram * 100 / {{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_total_visible_ram > 0))
+  - name: amd-dev-exporter-gpu-power-usage-rules
+    rules:    
+      - record: dev:GPU_POWER_USAGE_WATTS:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: {{ .Values.prometheus.defaultRules.pue }} * label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_package_power, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)")
+      - record: uuid:ceems_gpu_power_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: |2
+          (
+              ceems_compute_unit_gpu_sm_count
+            / on (gpuuuid,hostname) group_left ()
+              (sum by (gpuuuid,hostname) (ceems_compute_unit_gpu_sm_count) > 0)
+          )
+            * on (gpuuuid,hostname) group_left()
+              dev:gpu_power_usage_watts:pue{gpuiid="0"}
+          * on (gpuuuid,gpuiid,hostname,uuid) group_right()
+          ceems_compute_unit_gpu_index_flag
+      - record: job:ceems_gpu_power_watts:pue
+        labels:
+          {{ $ceemsPowerSourceLabelName }}: {{ $ceemsPowerSourceLabelValue }}
+        expr: sum by (job)(dev:gpu_power_usage_watts:pue)
+{{- if .Values.collectors.emissions.enabled }}
+{{- range $_, $provider := .Values.collectors.emissions.providers }}
+      - record: uuid:ceems_gpu_emissions_g_s:pue
+        expr: |2
+          label_replace(
+              uuid:ceems_gpu_power_watts:pue / 3.6e+06,
+              "provider",
+              "{{ $provider }}",
+              "instance",
+              "(.*)"
+            )
+          * on (provider) group_left ()
+          label_replace(
+              ceems_emissions_gCo2_kWh{country_code="{{ $.Values.collectors.emissions.countryCode }}",provider="{{ $provider }}"},
+              "{{ $ceemsPowerSourceLabelName }}",
+              "{{ $ceemsPowerSourceLabelValue }}",
+              "instance",
+              "(.*)"
+            )
+      - record: job:ceems_gpu_emissions_g_s:pue
+        expr: |2
+          label_replace(
+              job:ceems_gpu_power_watts:pue / 3.6e+06,
+              "provider",
+              "{{ $provider }}",
+              "instance",
+              "(.*)"
+            )
+          * on (provider) group_left ()
+          label_replace(
+              ceems_emissions_gCo2_kWh{country_code="{{ $.Values.collectors.emissions.countryCode }}",provider="{{ $provider }}"},
+              "{{ $ceemsPowerSourceLabelName }}",
+              "{{ $ceemsPowerSourceLabelValue }}",
+              "instance",
+              "(.*)"
+            )
+{{- end }}
+{{- end }}
+{{- if .Values.prometheus.defaultRules.rules.amdGPU.profiling }}
+      - record: uuid:ceems_gpu_prof_sm_active:ratio
+        expr: |2
+          label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_sm_active, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)")
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_tensor_active_percent:ratio
+        expr: |2
+          label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_tensor_active_percent, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)")
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_occupancy_percent:ratio
+        expr: |2
+          label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_occupancy_percent, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)")
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_total_16_ops:sum
+        expr: |2
+          label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_total_16_ops, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)")
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_total_32_ops:sum
+        expr: |2
+          label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_total_32_ops, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)")
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_total_64_ops:sum
+        expr: |2
+          label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_total_64_ops, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)")
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_write_size:sum
+        expr: |2
+          label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_write_size, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)")
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      - record: uuid:ceems_gpu_prof_fetch_size:sum
+        expr: |2
+          label_replace(label_replace({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_fetch_size, "gpuuuid", "$1", "serial_number", "(.*)"), "gpuiid", "$1", "gpu_partition_id", "(.*)")
+          * on (gpuuuid,gpuiid,hostname) group_right ()
+          ceems_compute_unit_gpu_index_flag
+      # Average usage over all hosts aggregated by Prometheus job
+      - record: job:ceems_gpu_prof_sm_active:ratio
+        expr: avg by (job) ({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_sm_active)
+      - record: job:ceems_gpu_prof_tensor_active_percent:ratio
+        expr: avg by (job) ({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_tensor_active_percent)
+      - record: job:ceems_gpu_prof_occupancy_percent:ratio
+        expr: avg by (job) ({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_occupancy_percent)
+      - record: job:ceems_gpu_prof_total_16_ops:sum
+        expr: avg by (job) ({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_total_16_ops)
+      - record: job:ceems_gpu_prof_total_32_ops:sum
+        expr: avg by (job) ({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_total_32_ops)
+      - record: job:ceems_gpu_prof_total_64_ops:sum
+        expr: avg by (job) ({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_total_64_ops)
+      - record: job:ceems_gpu_prof_write_size:sum
+        expr: avg by (job) ({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_write_size)
+      - record: job:ceems_gpu_prof_fetch_size:sum
+        expr: avg by (job) ({{ .Values.prometheus.defaultRules.rules.amdGPU.metricPrefix }}gpu_prof_fetch_size)
+{{- end }}
+{{- end }}
+{{- end }}

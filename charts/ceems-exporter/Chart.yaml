@@ -1,0 +1,37 @@
+apiVersion: v2
+name: ceems-exporter
+description: A Helm chart for deploying CEEMS Exporter
+icon: https://raw.githubusercontent.com/ceems-dev/ceems/main/website/static/img/logo.png
+keywords:
+  - ceems-exporter
+  - prometheus
+  - exporter
+  - ceems
+  - monitoring
+  - gpu
+  - nvidia
+  - amd
+  - energy
+  - emissions
+  - performance
+  - io
+  - network
+  - ebpf
+type: application
+version: 0.1.0
+# renovate: github=ceems-dev/ceems
+appVersion: 0.12.1
+home: https://ceems-dev.github.io/helm-charts/
+sources:
+  - https://github.com/ceems-dev/helm-charts
+maintainers:
+  - name: mahendrapaipuri
+    email: mahendra.paipuri@gmail.com
+    url: https://github.com/mahendrapaipuri
+annotations:
+  "artifacthub.io/license": Apache-2.0
+  "artifacthub.io/links": |
+    - name: Chart Source
+      url: https://github.com/ceems-dev/helm-charts
+    - name: Upstream Project
+      url: https://github.com/ceems-dev/ceems

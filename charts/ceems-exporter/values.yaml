@@ -1,0 +1,1178 @@
+# Default values for ceems-exporter.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Provide a name in place of ceems-exporter for `app:` labels
+#
+nameOverride: ""
+
+# -- Override the deployment namespace
+#
+namespaceOverride: ""
+
+# -- Provide a name to substitute for the full names of resources
+#
+fullnameOverride: ""
+
+# -- Labels to apply to all resources (can be templated)
+#
+commonLabels: {}
+# scmhash: abc123
+# myLabel: aakkmd
+
+# -- Image details
+#
+image:
+  registry: quay.io
+  repository: ceems/ceems
+  # -- Overrides the image tag whose default is `{{ printf "v%s" .Chart.AppVersion }}`
+  tag: ""
+  pullPolicy: IfNotPresent
+  digest: ""
+
+# -- Global variables
+#
+# To help compatibility with other charts which use global.imagePullSecrets.
+# Allow either an array of `{name: pullSecret}` maps (k8s-style), or an array of strings (more common helm-style).
+#
+# @raw
+#
+# ```yaml
+# global:
+#   imagePullSecrets:
+#   - name: pullSecret1
+#   - name: pullSecret2
+# ```
+# or
+#
+# ```yaml
+# global:
+#   imagePullSecrets:
+#   - pullSecret1
+#   - pullSecret2
+# ```
+#
+global:
+  # -- (list or object) Image pull secrets.
+  imagePullSecrets: []
+  # -- Allow parent charts to override registry hostname
+  imageRegistry: ""
+
+
+imagePullSecrets: []
+# - name: "image-pull-secret"
+
+# -- Number of old history to retain to allow rollback.
+# Default Kubernetes value is set to 10
+revisionHistoryLimit: 10
+
+# -- Use RBAC resources
+rbac:
+  # -- Create RBAC resources
+  create: true
+  # -- Any extra cluster roles to be added to CEEMS exporter.
+  extraClusterRoleRules: []
+  # - apiGroups: []
+  #   resources: []
+  #   verbs: []
+
+collectors:
+  k8s:
+    # -- Enable k8s collector
+    enabled: true
+    # -- Kubelet pod resources socket directory
+    kubeletSocketDirectory: /var/lib/kubelet/pod-resources
+  slurm:
+    # -- Enable SLURM collector
+    enabled: false
+    # -- If the SLURM configuration files are located in non-standard location,
+    # configure it here.
+    configDirectory: /etc/slurm
+  libvirt:
+    # -- Enable libvirt collector (for Openstack)
+    enabled: false
+  ipmi:
+    # -- Enable IPMI collector
+    enabled: false
+    # -- IPMI device file path.
+    device: /dev/ipmi0
+    # -- Monitor power and energy sensor readings
+    monitorPowerEnergySensorReadings: false
+    # -- Monitor sensor IDs
+    monitorSensorIDs: []
+  redfish:
+    # -- Enable Redfish collector
+    enabled: false
+    # -- Chassis name(s) that provide power usage of host ONLY (excluding GPU power usage)
+    chassisNames: []
+    # -- Redfish collector config.
+    # More info in [docs](https://ceems-dev.github.io/ceems/docs/configuration/ceems-exporter#redfish-collector)
+    config:
+      protocol: https
+      hostname: ""
+      port: 443
+      # -- When redfishProxy.enabled is set to true, it will be automatically set to the service URL of redfish proxy
+      external_url: ""
+      username: ""
+      password: ""
+      use_session_token: true
+      timeout: 5000
+  hwmon:
+    # -- Enable hwmon collector
+    enabled: false
+    # -- Chip name(s) that provide power usage of host ONLY (excluding GPU power usage)
+    chipNames: []
+  crayPMC:
+    # -- Enable cray PM counters
+    enabled: false
+  rapl:
+    # -- Enable RAPL collector
+    enabled: false
+  emissions:
+    # -- Enable emissions collector. As only a single instance of emission collector must be
+    # run, it is installed as a separate deployment different from daemonset (which runs on all nodes).
+    # The deployment will share the same configuration of daemonset except for the keys in the
+    # `deploy` section. A very minimal deployment is used for emissions exporter meaning that no
+    # extra init containers, secrets, configmaps are mounted.
+    #
+    # If kube-rbac-proxy is enabled on daemonset, it will be enabled on deployment as well with the
+    # same settings.
+    enabled: true
+    # -- Country code for estimating emissions.
+    # By default world average is used. Use an appropriate ISO 3166-1 alpha-2
+    # country code to get static emission factors for that country.
+    # When a different country code is used, uncomment `owid` provider under
+    # `providers` key.
+    countryCode: "ZZ"
+    # -- Emission factor providers
+    providers:
+      - global  # World average data reported by IEA (OECD).
+      # - owid  # Our World in Data static emission factors
+      # - emaps  # Electricity Maps. EMAPS_TOKEN environment variable must be set.
+      # - rte  # RTE eCO2 mix
+      # - wt  # Watt time. Environment variables WT_USERNAME, WT_PASSWORD and WT_REGION must be set.
+    deploy:
+      # -- Environment variables to set on emissions exporter deployment.
+      # Typically used to setup API keys and login credentials for dynamic emission factor
+      # providers
+      env: {}
+      # -- Affinity for deployment pods where emissions collector
+      # will be deployed. The node where this pod will be
+      # deployed must have access to internet when dynamic
+      # emission factors are enabled.
+      #
+      affinity: {}
+      #   requiredDuringSchedulingIgnoredDuringExecution:
+      #     nodeSelectorTerms:
+      #       - matchFields:
+      #           - key: metadata.name
+      #             operator: In
+      #             values:
+      #               - target-host-name
+      # -- Annotations to be added to ceems exporter deployment
+      deploymentAnnotations: {}
+      # -- Set a `NetworkPolicy` for deployment.
+      networkPolicy:
+        enabled: false
+
+        # ingress:
+        # - {}
+
+        # egress:
+        # - {}
+
+eBPFProfiling:
+  # -- Enable eBPF based profiling
+  enabled: false
+
+  # -- [Profiling config](https://ceems-dev.github.io/ceems/docs/configuration/ceems-exporter#ebpf-based-continuous-profiling).
+  # When `eBPFProfiling.enabled` is set to `true`, config must be provided to include client config of Pyroscope server.
+  config: {}
+
+# -- CEEMS exporter web config
+# Ref: https://ceems-dev.github.io/ceems/docs/configuration/basic-auth#reference
+webConfig: {}
+
+# -- Additional arguments for CEEMS exporter.
+# Any other collectors that are not presented under `ceemsExporter.collectors`
+# can be turned on here.
+#
+# List of dicts with `name` and `value` fields. `value` field can be empty for
+# name only arguments.
+# For e.g., for `--collector.k8s --log.level=debug` set the following
+#
+# @raw
+# ```yaml
+# additionalArgs:
+#   - name: collector.k8s
+#   - name: log.level
+#     value: debug
+# ```
+#
+additionalArgs: []
+#   - name: collector.ebpf.io-metrics
+#   - name: collector.redfish
+#   - name: log.level
+#     value: debug
+
+kubeRBACProxy:
+  # -- When enabled, creates a kube-rbac-proxy to protect the CEEMS exporter http endpoint.
+  # The requests are served through the same service but requests are HTTPS.
+  enabled: false
+  # -- Set environment variables as name/value pairs for kube-rbac-proxy.
+  env: {}
+    # VARIABLE: value
+
+  image:
+    registry: quay.io
+    repository: brancz/kube-rbac-proxy
+    tag: v0.20.1
+    sha: ""
+    pullPolicy: IfNotPresent
+
+  # -- List of additional CLI arguments to configure kube-rbac-proxy
+  # for example: `--tls-cipher-suites`, `--log-file`, etc.
+  # All the possible args can be found here: https://github.com/brancz/kube-rbac-proxy#usage
+  #
+  # Arguments must be passed as list of dicts with `name` and `value`
+  # as fields of dict. `value` can be optional for name only arguments.
+  #
+  # @raw
+  #
+  # ```yaml
+  # additionalArgs:
+  #   - name: log-file
+  #     value: /path/to/log/file
+  # ```
+  #
+  additionalArgs: []
+
+  # -- Specify security settings for a Container.
+  # Allows overrides and additional options compared to (Pod) `securityContext`.
+  # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+  containerSecurityContext:
+    privileged: false
+    readOnlyRootFilesystem: true
+
+  # -- Specify the port used for the CEEMS exporter container (upstream port)
+  port: 8010
+  # -- Specify the name of the container port
+  portName: http
+  # -- Configure a `hostPort`. If `true`, `hostPort` will be enabled in the container and set to service.port.
+  enableHostPort: false
+
+  # -- Configure Proxy Endpoints Port
+  # This is the port being probed for readiness
+  proxyEndpointsPort: 8888
+
+  # -- Configure a `hostPort` for Proxy. If `true`, `hostPort` will be enabled in the container and set to proxyEndpointsPort.
+  enableProxyEndpointsHostPort: false
+
+  # -- We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube.
+  resources: {}
+    ## If you do want to specify resources, uncomment the following
+    ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #  cpu: 100m
+    #  memory: 64Mi
+    # requests:
+    #  cpu: 10m
+    #  memory: 32Mi
+
+  # -- Additional volume mounts in the kube-rbac-proxy container
+  extraVolumeMounts: []
+    # - name: extra-volume
+    #   mountPath: /extra
+    #   readOnly: true
+
+  # -- `tls` enables using TLS resources from a volume on secret referred to in tlsSecret below.
+  # When enabling `tlsClientAuth`, client CA certificate must be set in tlsSecret.caItem.
+  # Ref. https://github.com/brancz/kube-rbac-proxy/issues/187
+  tls:
+    enabled: false
+    tlsClientAuth: false
+
+tlsSecret:
+  # -- `tlsSecret` refers to an existing secret holding TLS items: client CA certificate, private key and certificate.
+  # `secretName` and `volumeName` can be templated.
+  # If enabled, volume `volumeName` gets created on secret `secretName`.
+  # The volume's resources will be used by kube-rbac-proxy if `kubeRBACProxy.tls.enabled` is set.
+  enabled: false
+  # -- Key with client CA certificate (optional)
+  caItem: ""
+  # -- Key with certificate
+  certItem: tls.crt
+  # -- Key with private key
+  keyItem: tls.key
+  # -- Name of an existing secret
+  secretName: ceems-exporter-tls
+  # -- Name of the volume to be created
+  volumeName: ceems-exporter-tls
+
+service:
+  # -- Creating a service is enabled by default for CEEMS exporter.
+  enabled: true
+
+  # -- Service type
+  type: ClusterIP
+  # -- IP address for type `ClusterIP`
+  clusterIP: ""
+  # -- Default service port. Sets the port of the exposed container as well (NE or kubeRBACProxy).
+  # Use "servicePort" below if changing the service port only is desired.
+  port: 9010
+  # -- Service port. Use this field if you wish to set a different service port
+  # without changing the container port ("port" above).
+  servicePort: ""
+  # -- (int or string) Targeted port in the pod. Must refer to an open container port ("port" or "portName").
+  targetPort: 9010
+  # -- Name of the service port. Sets the port name of the main container (NE) as well.
+  portName: metrics
+  # -- Port number for service type NodePort
+  nodePort: null
+
+  # -- If `true`, CEEMS exporter will listen on all interfaces
+  listenOnAllInterfaces: true
+
+  # -- Additional annotations for the service
+  annotations:
+    prometheus.io/scrape: "true"
+
+  # -- Additional labels for the service
+  labels: {}
+
+  # -- Dual stack settings for the service
+  # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+  ipDualStack:
+    enabled: false
+    ipFamilies: ["IPv6", "IPv4"]
+    ipFamilyPolicy: "PreferDualStack"
+
+  # -- External traffic policy setting (Cluster, Local)
+  # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#traffic-policies
+  externalTrafficPolicy: ""
+
+  # -- Internal traffic policy setting (Cluster, Local)
+  # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#traffic-policies
+  internalTrafficPolicy: ""
+
+# -- Set a `NetworkPolicy` for daemonset.
+networkPolicy:
+  enabled: false
+
+  # ingress:
+  # - {}
+
+  # egress:
+  # - {}
+
+# -- Additional environment variables that will be passed to the daemonset
+env: {}
+#  env:
+#    VARIABLE: value
+
+prometheus:
+  defaultRules:
+    # -- Create default rules for CEEMS monitoring. These rules
+    # are necessary for Grafana dashboard panels.
+    #
+    # If default rules are not desired or not enough, additional
+    # custom rules to `additionalPrometheusRules` key
+    # under `kube-prometheus-stack` section.
+    #
+    create: true
+    rules:
+      # -- When there are NVIDIA GPUs in the cluster, enable `nvidiaGPU`
+      # rules. NVIDIA GPU operator deploys a DCGM exporter and current
+      # helm chart scrapes that exporter based on default labels used.
+      # If the deployed DCGM exporter supports profiling metrics, enable
+      # `profiling` as well.
+      nvidiaGPU:
+        enabled: false
+        profiling: false
+
+      # -- When there are AMD GPUs in the cluster, enabled `amdGPU` rules.
+      # AMD GPU operator deploys a device metrics exporter and current
+      # helm chart scrapes that exporter based on default labels used.
+      # If `metricsPrefix` in device metrics exporter is used anything other
+      # than empty string, set the same here in `metricPrefix`. Similarly
+      # when devices metrics exporter is configured to export profiling
+      # metrics as well, set `profiling` to true.
+      amdGPU:
+        enabled: false
+        profiling: false
+        metricPrefix: ""
+
+    # -- PUE factor to be used in rules for power usage
+    pue: 1
+
+    # -- Labels for default CEEMS rules
+    labels: {}
+    # -- Annotations for default CEEMS rules
+    annotations: {}
+
+  monitor:
+    # -- Enable Prometheus service monitor
+    enabled: true
+    # -- When enabled, service monitor for NVIDIA DCGM exporter will be installed to add NVIDIA DCGM exporter to scrape pools.
+    # The exporter pods and service can be running in any namespace. There is no need to run them in current chart's namespace.
+    dcgmExporterEnabled: false
+    # -- When enabled, service monitor for AMD device metrics exporter will be installed to add AMD device metrics exporter to scrape pools.
+    # The exporter pods and service can be running in any namespace. There is no need to run them in current chart's namespace.
+    amdDeviceMetricsExporterEnabled: false
+    # -- Additional labels, e.g. setting a label for pod monitor selector as set in prometheus
+    additionalLabels: {}
+    # -- Namespace in which to deploy the pod monitor. Defaults to the release namespace.
+    namespace: ""
+    # -- The label to use to retrieve the job name from. Defaults to label app.kubernetes.io/name.
+    jobLabel: ""
+    # -- prometheus.monitor.apiVersion ApiVersion for the serviceMonitor Resource(defaults to "monitoring.coreos.com/v1")
+    apiVersion: ""
+    # -- List of pod labels to add to ceems exporter metrics.
+    # More [info](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#servicemonitor)
+    podTargetLabels: []
+    # -- List of target labels to add to ceems exporter metrics.
+    # More [info](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#servicemonitor)
+    targetLabels: []
+
+    # -- Scheme/protocol to use for scraping.
+    scheme: http
+    # -- BasicAuth allow an endpoint to authenticate over basic authentication.
+    # More [info](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#basicauth)
+    basicAuth: {}
+    # -- TLS configuration to use when scraping the endpoint.
+    # More [info](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#v1.SafeTLSConfig)
+    tlsConfig: {}
+    # -- Authorization section for this endpoint.
+    # More [info](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#safeauthorization)
+    authorization: {}
+    # -- OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.
+    # More [info](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#oauth2)
+    oauth2: {}
+
+    # -- URL of a proxy that should be used for scraping.
+    proxyUrl: ""
+    # -- Override serviceMonitor selector
+    selectorOverride: {}
+    # -- Attach node metadata to discovered targets.
+    # Requires Prometheus v2.35.0 and above.
+    attachMetadata:
+      node: false
+
+    # -- Interval at which endpoints should be scraped. If not specified Prometheus’ global scrape interval is used.
+    interval: ""
+    # -- Timeout after which the scrape is ended. If not specified, the Prometheus global scrape interval is used.
+    scrapeTimeout: 10s
+    # -- HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
+    honorTimestamps: true
+    # -- HonorLabels chooses the metric’s labels on collisions with target labels.
+    honorLabels: true
+    # -- Whether to enable HTTP2. Default `false`.
+    enableHttp2: ""
+    # -- Drop pods that are not running. (Failed, Succeeded).
+    # Enabled by default. More [info](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase)
+    filterRunning: ""
+    # -- FollowRedirects configures whether scrape requests follow HTTP 3xx redirects. Default `false`.
+    followRedirects: ""
+    # -- Optional HTTP URL parameters
+    params: {}
+
+    # -- RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds
+    # relabelings for a few standard Kubernetes fields. The original scrape job’s name
+    # is available via the __tmp_prometheus_job_name label.
+    # More [info](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config)
+    relabelings: []
+    # -- MetricRelabelConfigs to apply to samples before ingestion.
+    metricRelabelings: []
+
+    # -- SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+    sampleLimit: 0
+    # -- TargetLimit defines a limit on the number of scraped targets that will be accepted.
+    targetLimit: 0
+    # -- Per-scrape limit on number of labels that will be accepted for a sample.
+    # Only valid in Prometheus versions 2.27.0 and newer.
+    labelLimit: 0
+    # --Per-scrape limit on length of labels name that will be accepted for a sample.
+    # Only valid in Prometheus versions 2.27.0 and newer.
+    labelNameLengthLimit: 0
+    # -- Per-scrape limit on length of labels value that will be accepted for a sample.
+    # Only valid in Prometheus versions 2.27.0 and newer.
+    labelValueLengthLimit: 0
+
+  podMonitor:
+    # -- Enable Prometheus Pod monitor.
+    # `PodMonitor` defines monitoring for a set of pods.
+    # Ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#podmonitor
+    #
+    # Using a `PodMonitor` may be preferred in some environments where there is very large number
+    # of Node Exporter endpoints (1000+) behind a single service.
+    # The `PodMonitor` is disabled by default. When switching from `ServiceMonitor` to `PodMonitor`,
+    # the time series resulting from the configuration through `PodMonitor` may have different labels.
+    # For instance, there will not be the service label any longer which might
+    # affect PromQL queries selecting that label.
+    enabled: false
+    # -- Namespace in which to deploy the pod monitor. Defaults to the release namespace.
+    namespace: ""
+    # -- Additional labels, e.g. setting a label for pod monitor selector as set in prometheus
+    additionalLabels: {}
+    #  release: ceems-exporter
+    # -- PodTargetLabels transfers labels of the Kubernetes Pod onto the target.
+    podTargetLabels: []
+    # -- apiVersion defaults to monitoring.coreos.com/v1.
+    apiVersion: ""
+    # -- Override pod selector to select pod objects.
+    selectorOverride: {}
+    # -- Attach node metadata to discovered targets. Requires Prometheus v2.35.0 and above.
+    attachMetadata:
+      node: false
+    # -- The label to use to retrieve the job name from. Defaults to label app.kubernetes.io/name.
+    jobLabel: ""
+
+    # -- Scheme/protocol to use for scraping.
+    scheme: "http"
+    # -- Path to scrape metrics at.
+    path: "/metrics"
+
+    # -- BasicAuth allow an endpoint to authenticate over basic authentication.
+    # More [info](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#basicauth)
+    basicAuth: {}
+    # -- TLS configuration to use when scraping the endpoint.
+    # More [info](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#v1.SafeTLSConfig)
+    tlsConfig: {}
+    # -- Authorization section for this endpoint.
+    # More [info](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#safeauthorization)
+    authorization: {}
+    # -- OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.
+    # More [info](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#oauth2)
+    oauth2: {}
+
+    # -- ProxyURL eg http://proxyserver:2195. Directs scrapes through proxy to this endpoint.
+    proxyUrl: ""
+    # -- Interval at which endpoints should be scraped. If not specified Prometheus’ global scrape interval is used.
+    interval: ""
+    # -- Timeout after which the scrape is ended. If not specified, the Prometheus global scrape interval is used.
+    scrapeTimeout: ""
+    # -- HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
+    honorTimestamps: true
+    # -- HonorLabels chooses the metric’s labels on collisions with target labels.
+    honorLabels: true
+    # -- Whether to enable HTTP2. Default false.
+    enableHttp2: ""
+    # -- Drop pods that are not running. (Failed, Succeeded).
+    # Enabled by default. More [info](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase)
+    filterRunning: ""
+    # -- `followRedirects` configures whether scrape requests follow HTTP 3xx redirects. Default false.
+    followRedirects: ""
+    # -- Optional HTTP URL parameters
+    params: {}
+
+    # -- `RelabelConfigs` to apply to samples before scraping. Prometheus Operator automatically adds
+    # relabelings for a few standard Kubernetes fields. The original scrape job’s name
+    # is available via the __tmp_prometheus_job_name label.
+    # More [info](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config)
+    relabelings: []
+    # -- MetricRelabelConfigs to apply to samples before ingestion.
+    metricRelabelings: []
+
+    # -- `SampleLimit` defines per-scrape limit on number of scraped samples that will be accepted.
+    sampleLimit: 0
+    # -- `TargetLimit` defines a limit on the number of scraped targets that will be accepted.
+    targetLimit: 0
+    # -- Per-scrape limit on number of labels that will be accepted for a sample.
+    # Only valid in Prometheus versions 2.27.0 and newer.
+    labelLimit: 0
+    # -- Per-scrape limit on length of labels name that will be accepted for a sample.
+    # Only valid in Prometheus versions 2.27.0 and newer.
+    labelNameLengthLimit: 0
+    # -- Per-scrape limit on length of labels value that will be accepted for a sample.
+    # Only valid in Prometheus versions 2.27.0 and newer.
+    labelValueLengthLimit: 0
+
+# -- Customize the `updateStrategy` if set
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+
+# -- We usually recommend not to specify default resources and to leave this as a conscious
+# choice for the user. This also increases chances charts run on environments with little
+# resources, such as Minikube.
+resources: {}
+  ## If you do want to specify resources, uncomment the following
+  ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 200m
+  #   memory: 50Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 30Mi
+
+# -- Specify the container restart policy passed to the CEEMS Exporter container
+# Possible Values: `Always|OnFailure|Never`.
+# Default is `Always`.
+restartPolicy: null
+
+serviceAccount:
+  # -- Specifies whether a ServiceAccount should be created
+  create: true
+  # -- The name of the ServiceAccount to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name:
+  annotations: {}
+  imagePullSecrets: []
+  # -- Whether to auto mount service token into pods.
+  automountServiceAccountToken: true
+
+# -- Important to set `fsGroup` to read secret mounts. By default exporter will drop privileges and
+# run as `nobody` user. If `--security.run-as-user` is set to a different user, use the primary
+# group ID of that user in `fsGroup`.
+securityContext:
+  runAsNonRoot: false
+  runAsUser: 0
+  fsGroup: 65534
+
+containerSecurityContext:
+  # -- CEEMS components are capability aware which means they drop all the unnecessary privileges
+  # based on runtime configuration. It is important to start pods always with privileges as exporter
+  # needs privileges for few collectors.
+  privileged: true
+  # -- Important to make root FS writable to add ACL to necessary files.
+  readOnlyRootFilesystem: false
+  # capabilities:
+  #   add:
+  #   - SYS_TIME
+
+# -- Expose the service to the host network
+hostNetwork: false
+
+# -- Share the host process ID namespace
+hostPID: false
+
+# -- Share the host IPC namespace
+hostIPC: false
+
+# -- Mount the node's root file system (`/`) at `/host/root` in the container
+hostRootFsMount:
+  enabled: false
+  # -- Defines how new mounts in existing mounts on the node or in the container
+  # are propagated to the container or node, respectively. Possible values are
+  # `None`, `HostToContainer`, and `Bidirectional`. If this field is omitted, then
+  # None is used. More information on:
+  # https://kubernetes.io/docs/concepts/storage/volumes/#mount-propagation
+  mountPropagation: HostToContainer
+
+hostProcFsMount:
+  # -- Mount the node's proc file system (`/proc`) at `/host/proc` in the container.
+  # Possible values are `None`, `HostToContainer`, and `Bidirectional`
+  mountPropagation: ""
+
+hostSysFsMount:
+  # -- Mount the node's sys file system (`/sys`) at `/host/sys` in the container.
+  # Possible values are `None`, `HostToContainer`, and `Bidirectional`
+  mountPropagation: ""
+
+# -- Assign a group of affinity scheduling rules
+# Affinity for daemon set that run on all the nodes
+#
+affinity: {}
+#   requiredDuringSchedulingIgnoredDuringExecution:
+#     nodeSelectorTerms:
+#       - matchFields:
+#           - key: metadata.name
+#             operator: In
+#             values:
+#               - target-host-name
+
+# -- Annotations to be added to ceems exporter pods
+podAnnotations: {}
+
+# -- Extra labels to add to ceems exporter pods (can be templated)
+podLabels: {}
+
+# -- Annotations to be added to ceems exporter daemonset
+daemonsetAnnotations: {}
+
+# -- Custom DNS configuration to be added to ceems-exporter pods
+dnsConfig: {}
+# nameservers:
+#   - 1.2.3.4
+# searches:
+#   - ns1.svc.cluster-domain.example
+#   - my.dns.search.suffix
+# options:
+#   - name: ndots
+#     value: "2"
+#   - name: edns0
+
+# -- Assign a `nodeSelector` if operating a hybrid cluster
+#
+nodeSelector:
+  kubernetes.io/os: linux
+  #  kubernetes.io/arch: amd64
+
+# -- (int) Specify grace period for graceful termination of pods. Defaults to 30 if null or not specified
+terminationGracePeriodSeconds: null
+
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
+
+terminationMessageParams:
+  # -- Enable or disable container termination message settings
+  # https://kubernetes.io/docs/tasks/debug/debug-application/determine-reason-pod-failure/
+  enabled: false
+  # -- If enabled, specify the path for termination messages
+  terminationMessagePath: /dev/termination-log
+  # -- If enabled, specify the policy for termination messages
+  terminationMessagePolicy: File
+
+# -- Assign a PriorityClassName to pods if set
+priorityClassName: ""
+
+# -- Additional mounts from the host to ceems-exporter container
+#
+extraHostVolumeMounts: []
+#  - name: <mountName>
+#    hostPath: <hostPath>
+#    https://kubernetes.io/docs/concepts/storage/volumes/#hostpath-volume-types
+#    type: "" (Default)|DirectoryOrCreate|Directory|FileOrCreate|File|Socket|CharDevice|BlockDevice
+#    mountPath: <mountPath>
+#    readOnly: true|false
+#    mountPropagation: None|HostToContainer|Bidirectional
+
+# -- Additional configmaps to be mounted.
+#
+configmaps: []
+# - name: <configMapName>
+#   mountPath: <mountPath>
+
+# -- Additional secrets to be mounted.
+#
+secrets: []
+# - name: <secretName>
+#   mountPath: <mountPatch>
+
+# -- Extra manifests to deploy as an array
+extraManifests: []
+  # - |
+  #   apiVersion: v1
+  #   kind: ConfigMap
+  #   metadata:
+  #     name: prometheus-extra
+  #   data:
+  #     extra-data: "value"
+
+# -- Extra volumes to become available in the pod
+extraVolumes: []
+  # - name: extra-volume
+  #   secret:
+  #     defaultMode: 420
+  #     optional: false
+  #     secretName: ceems-exporter-secret
+
+# -- Extra volume mounts in the ceems-exporter container
+extraVolumeMounts: []
+  # - name: extra-volume
+  #   mountPath: /extra
+  #   readOnly: true
+
+# -- Additional InitContainers to initialize the pod
+#
+extraInitContainers: []
+
+# -- Liveness probe
+#
+livenessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+
+# -- Readiness probe
+#
+readinessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+
+# -- Override version of app, required if image.tag is defined and does not follow semver
+version: ""
+
+redfishProxy:
+  # -- Deploys redfish proxy
+  enabled: false
+
+  imagePullSecrets: []
+  # - name: "image-pull-secret"
+
+  # -- Number of old history to retain to allow rollback
+  # Default Kubernetes value is set to 10
+  revisionHistoryLimit: 10
+
+  # Use RBAC resources
+  rbac:
+    # -- Create RBAC resources
+    create: true
+    # -- Any extra cluster roles to be added to redfish proxy.
+    extraClusterRoleRules: []
+    # - apiGroups: []
+    #   resources: []
+    #   verbs: []
+
+  # -- If redfish target servers are using self signed TLS certificates, set it to true
+  # to skip TLS verfication
+  insecureSkipVerify: false
+
+  # -- Additional arguments for redfish proxy
+  # List of dicts with `name` and `value` fields. `value` field can be empty for
+  # name only arguments.
+  # For e.g., for `--log.level=debug` set the following
+  #
+  # @raw
+  #
+  # ```yaml
+  # additionalArgs:
+  #   - name: log.level
+  #     value: debug
+  # ```
+  #
+  additionalArgs: []
+  #   - name: log.level
+  #     value: debug
+
+  # Configure kube-rbac-proxy.
+  kubeRBACProxy:
+    # -- When enabled, creates a kube-rbac-proxy to protect the redfish proxy and redfish proxy http endpoint.
+    # The requests are served through the same service but requests are HTTPS.
+    enabled: false
+    # -- Set environment variables as name/value pairs
+    env: {}
+      # VARIABLE: value
+
+    image:
+      registry: quay.io
+      repository: brancz/kube-rbac-proxy
+      tag: v0.20.1
+      sha: ""
+      pullPolicy: IfNotPresent
+
+    # -- List of additional CLI arguments to configure kube-rbac-proxy
+    # for example: `--tls-cipher-suites`, `--log-file`, etc.
+    # All the possible args can be found here: https://github.com/brancz/kube-rbac-proxy#usage
+    #
+    # Arguments must be passed as list of dicts with `name` and `value`
+    # as fields of dict. `value` can be optional for name only arguments.
+    #
+    # @raw
+    #
+    # ```yaml
+    # additionalArgs:
+    #   - name: log-file
+    #     value: /path/to/log/file
+    # ```
+    #
+    additionalArgs: []
+
+    # -- Specify security settings for a Container
+    # Allows overrides and additional options compared to (Pod) securityContext
+    # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+    containerSecurityContext:
+      privileged: false
+      readOnlyRootFilesystem: true
+
+    # -- Specify the port used for the redfish proxy container (upstream port)
+    port: 4000
+    # -- Specify the name of the container port
+    portName: http
+    # -- Configure a `hostPort`. If true, `hostPort` will be enabled in the container and set to service.port.
+    enableHostPort: false
+
+    # -- Configure Proxy Endpoints Port
+    # This is the port being probed for readiness
+    proxyEndpointsPort: 8888
+    # -- Configure a `hostPort`. If true, `hostPort` will be enabled in the container and set to `proxyEndpointsPort`.
+    enableProxyEndpointsHostPort: false
+
+    # -- We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube.
+    resources: {}
+      ## If you do want to specify resources, uncomment the following
+      ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      # limits:
+      #  cpu: 100m
+      #  memory: 64Mi
+      # requests:
+      #  cpu: 10m
+      #  memory: 32Mi
+
+    # -- Additional volume mounts in the kube-rbac-proxy container
+    extraVolumeMounts: []
+      # - name: extra-volume
+      #   mountPath: /extra
+      #   readOnly: true
+
+    # -- Enables using TLS resources from a volume on secret referred to in `tlsSecret` below.
+    # When enabling `tlsClientAuth`, client CA certificate must be set in `tlsSecret.caItem`.
+    # Ref. https://github.com/brancz/kube-rbac-proxy/issues/187
+    tls:
+      enabled: false
+      tlsClientAuth: false
+
+  tlsSecret:
+    # -- `tlsSecret` refers to an existing secret holding TLS items: client CA certificate, private key and certificate.
+    # `secretName` and `volumeName` can be templated.
+    # If enabled, volume `volumeName` gets created on secret `secretName`.
+    # The volume's resources will be used by kube-rbac-proxy if `kubeRBACProxy.tls.enabled` is set.
+    enabled: false
+    # -- Key with client CA certificate (optional)
+    caItem: ""
+    # -- Key with certificate
+    certItem: tls.crt
+    # -- Key with private key
+    keyItem: tls.key
+    # -- Name of an existing secret
+    secretName: redfish-proxy-tls
+    # -- Name of the volume to be created
+    volumeName: redfish-proxy-tls
+
+  # Service configuration for redfish proxy
+  service:
+    # -- Creating a service is enabled by default
+    enabled: true
+
+    # -- Service type
+    type: ClusterIP
+    # -- IP address for type `ClusterIP`
+    clusterIP: ""
+    # -- Default service port. Sets the port of the exposed container as well (NE or kubeRBACProxy).
+    # Use `servicePort` below if changing the service port only is desired.
+    port: 5000
+    # -- Service port. Use this field if you wish to set a different service port
+    # without changing the container port (`port` above).
+    servicePort: ""
+    # -- (int or string) Targeted port in the pod. Must refer to an open container port (`port` or `portName`).
+    targetPort: 5000
+    # -- Name of the service port. Sets the port name of the main container (NE) as well.
+    portName: metrics
+    # -- Port number for service type NodePort
+    nodePort: null
+
+    # -- If true, redfish proxy will listen on all interfaces
+    listenOnAllInterfaces: true
+
+    # -- Additional annotations and labels for the service
+    annotations: {}
+    labels: {}
+
+    # -- Dual stack settings for the service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipDualStack:
+      enabled: false
+      ipFamilies: ["IPv6", "IPv4"]
+      ipFamilyPolicy: "PreferDualStack"
+
+    # -- External traffic policy setting (Cluster, Local)
+    # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#traffic-policies
+    externalTrafficPolicy: ""
+    # -- Internal traffic policy setting (Cluster, Local)
+    # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#traffic-policies
+    internalTrafficPolicy: ""
+
+  # -- Set a NetworkPolicy with:
+  # ingress only on service.port or custom policy
+  networkPolicy:
+    enabled: false
+
+    # ingress:
+    # - {}
+
+    # egress:
+    # - {}
+
+  # -- Additional environment variables that will be passed to the deployment.
+  env: {}
+  #  env:
+  #    VARIABLE: value
+
+  # -- Customize the `updateStrategy` if set
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+
+  # -- We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube.
+  resources: {}
+    ## If you do want to specify resources, uncomment the following
+    ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 200m
+    #   memory: 50Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 30Mi
+
+  # -- Specify the container restart policy passed to the CEEMS Exporter container
+  # Possible Values: `Always|OnFailure|Never`. Default value is `Always`.
+  restartPolicy: null
+
+  serviceAccount:
+    # -- Specifies whether a `ServiceAccount` should be created
+    create: true
+    # -- The name of the `ServiceAccount` to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name:
+    annotations: {}
+    imagePullSecrets: []
+    automountServiceAccountToken: false
+
+  securityContext:
+    runAsGroup: 65534
+    runAsNonRoot: true
+    runAsUser: 65534
+
+  containerSecurityContext:
+    privileged: false
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    # capabilities:
+    #   add:
+    #   - SYS_TIME
+
+  # -- Expose the service to the host network
+  hostNetwork: false
+
+  # -- Share the host process ID namespace
+  hostPID: false
+
+  # -- Share the host IPC namespace
+  hostIPC: false
+
+  # -- Assign a group of affinity scheduling rules
+  #
+  affinity: {}
+    # nodeAffinity:
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #       - matchFields:
+    #           - key: metadata.name
+    #             operator: In
+    #             values:
+    #               - target-host-name
+
+  # -- Annotations to be added to redfish proxy pods
+  podAnnotations: {}
+
+  # -- Extra labels to add to redfish proxy pods (can be templated)
+  podLabels: {}
+
+  # -- Annotations to be added to redfish proxy deployment
+  deployAnnotations: {}
+
+  # -- Custom DNS configuration to be added to redfish proxy pods
+  dnsConfig: {}
+  # nameservers:
+  #   - 1.2.3.4
+  # searches:
+  #   - ns1.svc.cluster-domain.example
+  #   - my.dns.search.suffix
+  # options:
+  #   - name: ndots
+  #     value: "2"
+  #   - name: edns0
+
+  # -- Assign a `nodeSelector` if operating a hybrid cluster
+  nodeSelector:
+    kubernetes.io/os: linux
+    #  kubernetes.io/arch: amd64
+
+  # -- (int) Specify grace period for graceful termination of pods. Defaults to 30 if null or not specified
+  terminationGracePeriodSeconds: null
+
+  tolerations:
+    - effect: NoSchedule
+      operator: Exists
+
+  # -- Enable or disable container termination message settings
+  # Ref: https://kubernetes.io/docs/tasks/debug/debug-application/determine-reason-pod-failure/
+  terminationMessageParams:
+    enabled: false
+    # -- If enabled, specify the path for termination messages
+    terminationMessagePath: /dev/termination-log
+    # -- If enabled, specify the policy for termination messages
+    terminationMessagePolicy: File
+
+  # -- Assign a PriorityClassName to pods if set
+  priorityClassName: ""
+
+  # -- Additional mounts from the host to redfish-proxy container
+  extraHostVolumeMounts: []
+  #  - name: <mountName>
+  #    hostPath: <hostPath>
+  #    https://kubernetes.io/docs/concepts/storage/volumes/#hostpath-volume-types
+  #    type: "" (Default)|DirectoryOrCreate|Directory|FileOrCreate|File|Socket|CharDevice|BlockDevice
+  #    mountPath: <mountPath>
+  #    readOnly: true|false
+  #    mountPropagation: None|HostToContainer|Bidirectional
+
+  # -- Additional configmaps to be mounted.
+  configmaps: []
+  # - name: <configMapName>
+  #   mountPath: <mountPath>
+
+  # -- Additional secrets to be mounted.
+  secrets: []
+  # - name: <secretName>
+  #   mountPath: <mountPatch>
+
+  # -- Additional InitContainers to initialize the pod
+  extraInitContainers: []
+
+  # -- Extra manifests to deploy as an array
+  extraManifests: []
+    # - |
+    #   apiVersion: v1
+    #   kind: ConfigMap
+    #   metadata:
+    #     name: prometheus-extra
+    #   data:
+    #     extra-data: "value"
+
+  # -- Extra volumes to become available in the pod
+  extraVolumes: []
+    # - name: extra-volume
+    #   secret:
+    #     defaultMode: 420
+    #     optional: false
+    #     secretName: redfish-proxy-secret
+
+  # -- Extra volume mounts in the redfish-proxy container
+  extraVolumeMounts: []
+    # - name: extra-volume
+    #   mountPath: /extra
+    #   readOnly: true
+
+  # --Liveness probe
+  livenessProbe:
+    failureThreshold: 3
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+
+  # -- Readiness probe
+  readinessProbe:
+    failureThreshold: 3
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+
+  # -- Override version of app, required if image.tag is defined and does not follow semver
+  version: ""

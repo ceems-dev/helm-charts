@@ -1,0 +1,39 @@
+---
+
+# This scenario uses basic auth for CEEMS exporter so that
+# any unauthorised access can be avoided
+
+# CEEMS exporter web config
+# Username: ceems
+# Plain text password: ceems
+webConfig:
+  basic_auth_users:
+    ceems: $2y$10$XdfIZZ7iibwGbyjniv6kcOPOTxH8lrCsXaljyBGubL.xLu1esjEpm
+
+prometheus:
+  monitor:
+    enabled: true
+    # Basic auth credentials of CEEMS exporter for service monitor to scrape
+    # targets
+    basicAuth:
+      username:
+        name: kube-ceems-exporter-basic-auth-credentials
+        key: username
+      password:
+        name: kube-ceems-exporter-basic-auth-credentials
+        key: password
+
+# Plain text username and password must be created as secret for Prometheus
+# service monitor to read
+extraManifests:
+  - |
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: kube-ceems-exporter-basic-auth-credentials
+      namespace: {{ include "ceems-exporter.namespace" . }}
+      labels:
+        {{- include "ceems-exporter.labels" . | nindent 4 }}
+    data:
+      username: {{ b64enc "ceems" }}
+      password: {{ b64enc "ceems" }}

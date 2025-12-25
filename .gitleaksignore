@@ -12,3 +12,11 @@ charts/kube-ceems/ci/03-tls-values.yaml:private-key:802
 /github/workspace/charts/kube-ceems/ci/03-tls-values.yaml:private-key:515
 /github/workspace/charts/kube-ceems/ci/03-tls-values.yaml:private-key:659
 /github/workspace/charts/kube-ceems/ci/03-tls-values.yaml:private-key:802
+charts/ceems-exporter/ci/05-kube-rbac-proxy-custom-certs-values.yaml:private-key:33
+charts/ceems-exporter/ci/03-tls-values.yaml:private-key:60
+charts/ceems-exporter/ci/03-tls-values.yaml:kubernetes-secret-yaml:117
+charts/ceems-exporter/ci/03-tls-values.yaml:private-key:126
+/github/workspace/charts/ceems-exporter/ci/05-kube-rbac-proxy-custom-certs-values.yaml:private-key:33
+/github/workspace/charts/ceems-exporter/ci/03-tls-values.yaml:private-key:60
+/github/workspace/charts/ceems-exporter/ci/03-tls-values.yaml:kubernetes-secret-yaml:117
+/github/workspace/charts/ceems-exporter/ci/03-tls-values.yaml:private-key:126

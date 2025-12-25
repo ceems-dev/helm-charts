@@ -1,0 +1,63 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ceems-exporter.fullname" . }}
+  namespace: {{ include "ceems-exporter.namespace" . }}
+  labels:
+    {{- include "ceems-exporter.labels" $ | nindent 4 }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingress:
+    {{- if .Values.networkPolicy.ingress }}
+      {{- toYaml .Values.networkPolicy.ingress | nindent 4 }}
+    {{- else }}
+    - ports:
+      - port: {{ .Values.service.port }}
+    {{- end }}
+    {{- if .Values.networkPolicy.egress }}
+  egress:
+      {{- toYaml .Values.networkPolicy.egress | nindent 4 }}
+    {{- end }}
+  policyTypes:
+    - Egress
+    - Ingress
+  podSelector:
+    matchLabels:
+      {{- include "ceems-exporter.selectorLabels" . | nindent 6 }}
+{{- end }}
+{{- if and .Values.collectors.emissions.enabled .Values.collectors.emissions.deploy.networkPolicy.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ceems-exporter.fullname" . }}-emissions
+  namespace: {{ include "ceems-exporter.namespace" . }}
+  labels:
+    {{- include "ceems-exporter.labels" $ | nindent 4 }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingress:
+    {{- if .Values.collectors.emissions.deploy.networkPolicy.ingress }}
+      {{- toYaml .Values.collectors.emissions.deploy.networkPolicy.ingress | nindent 4 }}
+    {{- else }}
+    - ports:
+      - port: {{ .Values.service.port }}
+    {{- end }}
+  egress:
+    {{- if .Values.collectors.emissions.deploy.networkPolicy.egress }}
+      {{- toYaml .Values.collectors.emissions.deploy.networkPolicy.egress | nindent 4 }}
+    {{- end }}
+  policyTypes:
+    - Egress
+    - Ingress
+  podSelector:
+    matchLabels:
+      {{- include "ceems-exporter.selectorLabels" . | nindent 6 }}
+{{- end }}
