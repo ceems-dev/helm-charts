@@ -1,0 +1,31 @@
+{{- if and .Values.redfishProxy.enabled .Values.redfishProxy.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ceems-exporter.redfish-proxy.fullname" . }}
+  namespace: {{ include "ceems-exporter.redfish-proxy.namespace" . }}
+  labels:
+    {{- include "ceems-exporter.redfish-proxy.labels" $ | nindent 4 }}
+  {{- with .Values.redfishProxy.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingress:
+    {{- if .Values.redfishProxy.networkPolicy.ingress }}
+      {{- toYaml .Values.redfishProxy.networkPolicy.ingress | nindent 4 }}
+    {{- else }}
+    - ports:
+      - port: {{ .Values.redfishProxy.service.port }}
+    {{- end }}
+  egress:
+    {{- if .Values.redfishProxy.networkPolicy.egress }}
+      {{- toYaml .Values.redfishProxy.networkPolicy.egress | nindent 4 }}
+    {{- end }}
+  policyTypes:
+    - Egress
+    - Ingress
+  podSelector:
+    matchLabels:
+      {{- include "ceems-exporter.redfish-proxy.selectorLabels" . | nindent 6 }}
+{{- end }}

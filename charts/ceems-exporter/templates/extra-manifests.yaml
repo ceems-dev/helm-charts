@@ -1,0 +1,8 @@
+{{- with (include "ceems-exporter.service-monitor-secret" .) }}
+---
+{{ tpl . $ }}
+{{- end }}
+{{ range .Values.extraManifests }}
+---
+{{ tpl . $ }}
+{{ end }}

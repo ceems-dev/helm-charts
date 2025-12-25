@@ -1,0 +1,18 @@
+{{- if .Values.rbac.create }}
+{{- if or .Values.kubeRBACProxy.enabled .Values.collectors.k8s.enabled (gt (len .Values.rbac.extraClusterRoleRules) 0) (and .Values.redfishProxy.enabled .Values.redfishProxy.kubeRBACProxy.enabled) }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    {{- include "ceems-exporter.labels" . | nindent 4 }}
+  name: {{ template "ceems-exporter.fullname" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ template "ceems-exporter.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ template "ceems-exporter.serviceAccountName" . }}
+  namespace: {{ template "ceems-exporter.namespace" . }}
+{{- end }}
+{{- end }}

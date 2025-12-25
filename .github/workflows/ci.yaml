@@ -69,6 +69,7 @@ jobs:
 
           # Setup runner IP in ci values file
           RUNNER_IP=$(ip -o route get to 8.8.8.8 | sed -n 's/.*src \([0-9.]\+\).*/\1/p')
+          sed -i "s/RUNNER_IP/${RUNNER_IP}/g" charts/ceems-exporter/ci/07-with-redfish-proxy-values.yaml
           sed -i "s/RUNNER_IP/${RUNNER_IP}/g" charts/kube-ceems/ci/09-with-redfish-proxy-values.yaml
 
           # Set perf_event_paranoid parameter to 0 for eBPF stuff to work

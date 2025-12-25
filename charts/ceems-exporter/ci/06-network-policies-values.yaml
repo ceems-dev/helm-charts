@@ -1,0 +1,32 @@
+---
+# This scenario shows how to use network policies to restrict
+# the access to CEEMS exporter.
+
+collectors:
+  emissions:
+    deploy:
+      # Enable network policy for emissions exporter.
+      networkPolicy:
+        enabled: true
+        # Allow ingress only from Prometheus
+        ingress:
+          - from:
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: prometheus
+        # Allow ALL egress
+        egress:
+          - {}
+
+# Enable network policy for CEEMS exporter daemonset.
+networkPolicy:
+  enabled: true
+  # Allow ingress only from Prometheus
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: prometheus
+  # Allow ALL egress
+  egress:
+    - {}

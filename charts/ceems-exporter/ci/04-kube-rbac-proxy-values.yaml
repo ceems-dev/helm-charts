@@ -1,0 +1,14 @@
+---
+# This scenario uses kube RBAC proxy for the CEEMS exporter so that
+# any unauthorised access of CEEMS exporter can be
+# avoided.
+#
+# This scenario also enables eBPF based profiling.
+
+# Enable eBPF profiling
+eBPFProfiling:
+  enabled: true
+
+# Enable kube RBAC proxy
+kubeRBACProxy:
+  enabled: true
