@@ -136,7 +136,7 @@ string
 </div>
 			</td>
 			<td>
-Provide a name in place of kube-ceems for `app:` labels
+Provide a name in place of ceems-exporter for `app:` labels
 </td>
 		</tr>
 		<tr>
