@@ -11,32 +11,7 @@ clusterID: myk8s-kube-rbac-proxy
 kubeRBACProxy:
   enabled: true
 
-# A role to be able to query Prometheus
-# that is behind kube RBAC proxy
-rbac:
-  extraClusterRoleRules:
-    - apiGroups: [""]
-      resources:
-        - services/ceems-kube-ceems-prometheus
-      verbs: ["get"]
-
 # CEEMS API server's clusters config
 clusters:
   - id: myk8s-kube-rbac-proxy
     manager: k8s
-    updaters:
-      - myk8s-kube-rbac-proxy-tsdb
-
-# CEEMS API server's updaters config
-updaters:
-  - id: myk8s-kube-rbac-proxy-tsdb
-    updater: tsdb
-    web:
-      url: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "kube-ceems.api-server.namespace" . }}:10090
-      # As CEEMS API server has necessary cluster role, we need to
-      # use the token of service account to query Prometheus behind kube RBAC proxy
-      authorization:
-        type: Bearer
-        credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-      tls_config:
-        insecure_skip_verify: true
