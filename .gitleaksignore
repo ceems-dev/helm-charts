@@ -20,3 +20,7 @@ charts/ceems-exporter/ci/03-tls-values.yaml:private-key:126
 /github/workspace/charts/ceems-exporter/ci/03-tls-values.yaml:private-key:60
 /github/workspace/charts/ceems-exporter/ci/03-tls-values.yaml:kubernetes-secret-yaml:117
 /github/workspace/charts/ceems-exporter/ci/03-tls-values.yaml:private-key:126
+charts/ceems-api-server/ci/03-tls-values.yaml:private-key:64
+charts/ceems-api-server/ci/05-kube-rbac-proxy-custom-certs-values.yaml:private-key:36
+/github/workspace/charts/ceems-api-server/ci/03-tls-values.yaml:private-key:64
+/github/workspace/charts/ceems-api-server/ci/05-kube-rbac-proxy-custom-certs-values.yaml:private-key:36
