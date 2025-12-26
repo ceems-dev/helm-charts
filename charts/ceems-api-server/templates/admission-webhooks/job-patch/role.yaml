@@ -1,0 +1,22 @@
+{{- if and .Values.admissionWebhooks.enabled .Values.admissionWebhooks.patch.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name:  {{ template "ceems-api-server.fullname" . }}-admission-webhook
+  namespace: {{ template "ceems-api-server.namespace" . }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "-20"
+  labels:
+    app: {{ template "ceems-api-server.name" $ }}-admission-webhook
+    {{- include "ceems-api-server.admission.webhook.labels" $ | nindent 4 }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - create
+{{- end }}

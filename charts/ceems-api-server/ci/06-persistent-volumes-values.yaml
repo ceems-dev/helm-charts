@@ -1,0 +1,15 @@
+---
+# This scenario shows how to configure Persistent Volumes (PV)
+# for the components that require them like CEEMS API server.
+#
+# For sake of simplicity, local-path-provisioner (https://github.com/rancher/local-path-provisioner)
+# is used as it is practical to test is easily in CI.
+
+# Enable persistence for CEEMS API server
+persistence:
+  enabled: true
+  storageClassName: local-path
+  type: sts
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi

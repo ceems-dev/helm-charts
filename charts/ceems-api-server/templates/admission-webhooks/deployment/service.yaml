@@ -1,0 +1,43 @@
+{{- if .Values.admissionWebhooks.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "ceems-api-server.fullname" . }}-admission-controller
+  namespace: {{ template "ceems-api-server.namespace" . }}
+  labels:
+    app: {{ template "ceems-api-server.name" . }}-admission-controller
+    {{- include "ceems-api-server.admission.controller.labels" . | nindent 4 }}
+{{- if .Values.admissionWebhooks.deployment.service.labels }}
+{{ toYaml .Values.admissionWebhooks.deployment.service.labels | indent 4 }}
+{{- end }}
+{{- if .Values.admissionWebhooks.deployment.service.annotations }}
+  annotations:
+{{ toYaml .Values.admissionWebhooks.deployment.service.annotations | indent 4 }}
+{{- end }}
+spec:
+{{- if .Values.admissionWebhooks.deployment.service.clusterIP }}
+  clusterIP: {{ .Values.admissionWebhooks.deployment.service.clusterIP }}
+{{- end }}
+{{- if .Values.admissionWebhooks.deployment.service.ipDualStack.enabled }}
+  ipFamilies: {{ toYaml .Values.admissionWebhooks.deployment.service.ipDualStack.ipFamilies | nindent 4 }}
+  ipFamilyPolicy: {{ .Values.admissionWebhooks.deployment.service.ipDualStack.ipFamilyPolicy }}
+{{- end }}
+{{- if .Values.admissionWebhooks.deployment.service.externalIPs }}
+  externalIPs:
+{{ toYaml .Values.admissionWebhooks.deployment.service.externalIPs | indent 4 }}
+{{- end }}
+{{- if ne .Values.admissionWebhooks.deployment.service.type "ClusterIP" }}
+  externalTrafficPolicy: {{ .Values.admissionWebhooks.deployment.service.externalTrafficPolicy }}
+{{- end }}
+  ports:
+  - name: https
+    {{- if eq .Values.admissionWebhooks.deployment.service.type "NodePort"}}
+    nodePort: {{ .Values.admissionWebhooks.deployment.service.nodePortTls }}
+    {{- end }}
+    port: 443
+    targetPort: https
+  selector:
+    app: {{ template "ceems-api-server.name" . }}-admission-controller
+    release: {{ $.Release.Name | quote }}
+  type: "{{ .Values.admissionWebhooks.deployment.service.type }}"
+{{- end }}

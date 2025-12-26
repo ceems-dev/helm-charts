@@ -1,0 +1,52 @@
+---
+# This scenario uses kube RBAC proxy for the CEEMS API server so that
+# any unauthorised access of CEEMS API server can be
+# avoided.
+
+# Use a human readable cluster ID as we need to provide CEEMS API server and LB
+# configs manually.
+clusterID: myk8s-kube-rbac-proxy-cc
+
+
+# Enable kube RBAC proxy and TLS
+kubeRBACProxy:
+  enabled: true
+  tls:
+    enabled: true
+
+# TLS certificates and keys used by kube RBAC proxy
+tlsSecret:
+  enabled: true
+  caItem: client-ca.crt
+  secretName: kube-ceems-tls
+  volumeName: kube-ceems-tls
+
+# A role to be able to query Prometheus
+# that is behind kube RBAC proxy
+rbac:
+  extraClusterRoleRules:
+    - apiGroups: [""]
+      resources:
+        - services/ceems-kube-ceems-prometheus
+      verbs: ["get"]
+
+# CEEMS API server's clusters config
+clusters:
+  - id: myk8s-kube-rbac-proxy-cc
+    manager: k8s
+    updaters:
+      - myk8s-kube-rbac-proxy-cc-tsdb
+
+# CEEMS API server's updaters config
+updaters:
+  - id: myk8s-kube-rbac-proxy-cc-tsdb
+    updater: tsdb
+    web:
+      url: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "kube-ceems.api-server.namespace" . }}:10090
+      # As CEEMS API server has necessary cluster role, we need to
+      # use the token of service account to query Prometheus behind kube RBAC proxy
+      authorization:
+        type: Bearer
+        credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      tls_config:
+        insecure_skip_verify: true

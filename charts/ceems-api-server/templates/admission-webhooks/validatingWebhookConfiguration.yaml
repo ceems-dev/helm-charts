@@ -1,0 +1,38 @@
+{{- if .Values.admissionWebhooks.enabled }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name:  {{ template "ceems-api-server.admission.fullname" . }}
+  annotations:
+    {{- with .Values.admissionWebhooks.validatingWebhookConfiguration.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  labels:
+    {{- include "ceems-api-server.admission.webhook.labels" $ | nindent 4 }}
+webhooks:
+  - name: validate.ceems.io
+    failurePolicy: Ignore
+    rules:
+      - apiGroups:
+          - "*"
+        apiVersions:
+          - "*"
+        resources:
+          - pods
+        operations:
+          - CREATE
+          - UPDATE
+    clientConfig:
+      service:
+        namespace: {{ template "ceems-api-server.namespace" . }}
+        name: {{ template "ceems-api-server.fullname" $ }}-admission-controller
+        path: /ceems-admission-controller/validate
+      {{- if and .Values.admissionWebhooks.caBundle (not .Values.admissionWebhooks.patch.enabled) }}
+      caBundle: {{ .Values.admissionWebhooks.caBundle }}
+      {{- end }}
+    timeoutSeconds: {{ .Values.admissionWebhooks.timeoutSeconds }}
+    admissionReviewVersions:
+      - v1
+      - v1beta1
+    sideEffects: None
+{{- end }}

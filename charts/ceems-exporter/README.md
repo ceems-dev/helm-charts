@@ -45,7 +45,7 @@ command documentation for information on installing charts via the traditional r
 ### Install Helm Chart
 
 ```console
-helm install -n ceems --create-namespace ceems oci://ghcr.io/ceems-dev/charts/ceems-exporter
+helm install -n ceems --create-namespace ceems-exporter oci://ghcr.io/ceems-dev/charts/ceems-exporter
 ```
 
 _See [configuration](#configuration) below._
@@ -55,7 +55,7 @@ _See [helm install](https://helm.sh/docs/helm/helm_install/) for command documen
 ### Uninstall Helm Chart
 
 ```console
-helm uninstall ceems
+helm uninstall -n ceems ceems-exporter
 ```
 
 This removes all the Kubernetes components associated with the chart and deletes the release.
@@ -65,7 +65,7 @@ _See [helm uninstall](https://helm.sh/docs/helm/helm_uninstall/) for command doc
 ### Upgrading Chart
 
 ```console
-helm upgrade -n ceems ceems
+helm upgrade -n ceems ceems-exporter
 ```
 
 _See [helm upgrade](https://helm.sh/docs/helm/helm_upgrade/) for command documentation._
