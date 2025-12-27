@@ -1,0 +1,21 @@
+{{- if and .Values.admissionWebhooks.enabled .Values.admissionWebhooks.patch.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name:  {{ template "ceems-api-server.fullname" . }}-admission-webhook
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "-30"
+  labels:
+    app: {{ template "ceems-api-server.name" $ }}-admission-webhook
+    {{- include "ceems-api-server.admission.webhook.labels" $ | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ template "ceems-api-server.fullname" . }}-admission-webhook
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "ceems-api-server.fullname" . }}-admission-webhook
+    namespace: {{ template "ceems-api-server.namespace" . }}
+{{- end }}

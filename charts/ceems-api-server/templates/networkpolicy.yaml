@@ -1,0 +1,31 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ceems-api-server.fullname" . }}
+  namespace: {{ include "ceems-api-server.namespace" . }}
+  labels:
+    {{- include "ceems-api-server.labels" $ | nindent 4 }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingress:
+    {{- if .Values.networkPolicy.ingress }}
+      {{- toYaml .Values.networkPolicy.ingress | nindent 4 }}
+    {{- else }}
+    - ports:
+      - port: {{ .Values.service.port }}
+    {{- end }}
+  egress:
+    {{- if .Values.networkPolicy.egress }}
+      {{- toYaml .Values.networkPolicy.egress | nindent 4 }}
+    {{- end }}
+  policyTypes:
+    - Egress
+    - Ingress
+  podSelector:
+    matchLabels:
+      {{- include "ceems-api-server.selectorLabels" . | nindent 6 }}
+{{- end }}

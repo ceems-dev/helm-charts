@@ -1,11 +1,9 @@
 apiVersion: v2
-name: ceems-exporter
-description: A Helm chart for deploying CEEMS Exporter
+name: ceems-api-server
+description: A Helm chart for deploying CEEMS API server
 icon: https://raw.githubusercontent.com/ceems-dev/ceems/main/website/static/img/logo.png
 keywords:
-  - ceems-exporter
-  - prometheus
-  - exporter
+  - ceems-api-server
   - ceems
   - monitoring
   - gpu
@@ -18,7 +16,7 @@ keywords:
   - network
   - ebpf
 type: application
-version: 0.2.0
+version: 0.1.0
 # renovate: github=ceems-dev/ceems
 appVersion: 0.12.1
 home: https://ceems-dev.github.io/helm-charts/

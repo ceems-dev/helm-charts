@@ -1,0 +1,17 @@
+---
+# This scenario uses kube RBAC proxy for the CEEMS API server so that
+# any unauthorised access of CEEMS API server can be
+# avoided.
+
+# Use a human readable cluster ID as we need to provide CEEMS API server and LB
+# configs manually.
+clusterID: myk8s-kube-rbac-proxy
+
+# Enable kube RBAC proxy
+kubeRBACProxy:
+  enabled: true
+
+# CEEMS API server's clusters config
+clusters:
+  - id: myk8s-kube-rbac-proxy
+    manager: k8s

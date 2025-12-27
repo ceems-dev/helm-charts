@@ -1,0 +1,21 @@
+---
+
+# This scenario uses basic auth for the CEEMS API server so that
+# any unauthorised access of CEEMS API server can be
+# avoided
+
+# CEEMS API server web config
+# Username: ceems
+# Plain text password: ceems
+webConfig:
+  basic_auth_users:
+    ceems: $2y$10$XdfIZZ7iibwGbyjniv6kcOPOTxH8lrCsXaljyBGubL.xLu1esjEpm
+
+grafana:
+  datasource:
+    create: true
+    # Create Grafana datasource for CEEMS API server using basic auth credentials
+    # as below (in plain text)
+    basicAuth:
+      username: ceems
+      password: ceems

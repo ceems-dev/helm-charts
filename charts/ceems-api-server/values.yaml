@@ -1,0 +1,790 @@
+# Default values for ceems-api-server.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Provide a name in place of ceems-api-server for `app:` labels
+#
+nameOverride: ""
+
+# -- Override the deployment namespace
+#
+namespaceOverride: ""
+
+# -- Provide a name to substitute for the full names of resources
+#
+fullnameOverride: ""
+
+# -- Labels to apply to all resources (can be templated)
+#
+commonLabels: {}
+# scmhash: abc123
+# myLabel: aakkmd
+
+# -- Image details
+#
+image:
+  registry: quay.io
+  repository: ceems/ceems
+  # -- Overrides the image tag whose default is `{{ printf "v%s" .Chart.AppVersion }}`
+  tag: ""
+  pullPolicy: IfNotPresent
+  digest: ""
+
+# -- Global variables
+#
+# To help compatibility with other charts which use global.imagePullSecrets.
+# Allow either an array of `{name: pullSecret}` maps (k8s-style), or an array of strings (more common helm-style).
+#
+# @raw
+#
+# ```yaml
+# global:
+#   imagePullSecrets:
+#   - name: pullSecret1
+#   - name: pullSecret2
+# ```
+# or
+#
+# ```yaml
+# global:
+#   imagePullSecrets:
+#   - pullSecret1
+#   - pullSecret2
+# ```
+#
+global:
+  # -- (list or object) Image pull secrets.
+  imagePullSecrets: []
+  # -- Allow parent charts to override registry hostname
+  imageRegistry: ""
+
+# -- Monitoring related configuraton for the current k8s cluster.
+#
+monitoring:
+  # -- Monitor current k8s cluster. Setting it to `true` will auto configure CEEMS API server
+  # with configuration corresponding to current cluster.
+  # Note the deployment based on default values do not use any sort of authentication for
+  # CEEMS exporter/CEEMS API server/CEEMS LB/Prometheus. If kube-rbac-proxy is enabled
+  # for CEEMS components the configuration for different components needs to be setup
+  # manually by using appropriate `Authorization` headers and cluster roles. In that
+  # case, set this value to `false` and pass the configuration of different CEEMS components
+  # using corresponding values in chart.
+  #
+  enabled: true
+
+  # -- Current cluster ID for CEEMS.
+  # When `monitorCurrentCluster` is set to `true` and `clusterID` is empty
+  # a default based on release name will be used. To have a more
+  # human readable cluster ID we recommend users to set this to unique
+  # value.
+  #
+  clusterID: ""
+
+  # -- Web config for TSDB updater, if available.
+  # Ref: https://ceems-dev.github.io/ceems/docs/configuration/config-reference#web_client_config
+  #
+  updaterWebConfig: {}
+
+imagePullSecrets: []
+# - name: "image-pull-secret"
+
+# -- Number of old history to retain to allow rollback.
+# Default Kubernetes value is set to 10
+revisionHistoryLimit: 10
+
+rbac:
+  # -- Create RBAC resources
+  create: true
+  # -- Any extra cluster roles to be added to CEEMS exporter.
+  extraClusterRoleRules: []
+  # - apiGroups: []
+  #   resources: []
+  #   verbs: []
+
+admissionWebhooks:
+  # -- Enable admission webhook to add username annotations to pods.
+  #
+  # Must be enabled when monitoring k8s clusters.
+  # The controller will add the username annotations to pods which are needed by CEEMS API server
+  # to account for energy usage of individual users.
+  # By default, admission controller DO NOT STOP any pods from scheduling, it only adds username
+  # annotations to the pod's spec.
+  enabled: true
+  # -- The default timeoutSeconds is 10 and the maximum value is 30.
+  timeoutSeconds: 10
+  # -- A PEM encoded CA bundle which will be used to validate the webhook's server certificate.
+  # If unspecified, system trust roots on the apiserver are used.
+  caBundle: ""
+
+  annotations: {}
+  #   argocd.argoproj.io/hook: PreSync
+  #   argocd.argoproj.io/hook-delete-policy: HookSucceeded
+
+  mutatingWebhookConfiguration:
+    annotations: {}
+    #   argocd.argoproj.io/hook: PreSync
+
+  validatingWebhookConfiguration:
+    annotations: {}
+    #   argocd.argoproj.io/hook: PreSync
+
+  deployment:
+    # -- Number of replicas
+    #
+    replicas: 1
+
+    # -- Strategy of the deployment
+    #
+    strategy: {}
+
+    # -- Number of old replicasets to retain.
+    # The default value is 10, 0 will garbage-collect old replicasets.
+    revisionHistoryLimit: 10
+
+    # -- Extra arguments to admission controller.
+    # List of dicts with `name` and `value` fields for each dict.
+    additionalArgs: []
+
+    # -- Service account for CEEMS admission Webhook to use.
+    # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+    #
+    serviceAccount:
+      annotations: {}
+      automountServiceAccountToken: false
+      create: true
+      name: ""
+
+    # -- Configuration for CEEMS admission Webhook service
+    #
+    service:
+      annotations: {}
+      labels: {}
+      clusterIP: ""
+      ipDualStack:
+        enabled: false
+        ipFamilies: ["IPv6", "IPv4"]
+        ipFamilyPolicy: "PreferDualStack"
+
+      # -- Port to expose on each node.
+      # Only used if `service.type` is `NodePort`
+      #
+      nodePort: ""
+
+      # -- Additional ports to open for CEEMS admission Webhook service
+      # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#multi-port-services
+      #
+      additionalPorts: []
+
+      # -- Denotes if this Service desires to route external traffic to node-local or cluster-wide endpoints
+      #
+      externalTrafficPolicy: Cluster
+
+      # -- Service type. Possible values are
+      # `NodePort`, `ClusterIP`, `LoadBalancer`
+      #
+      type: ClusterIP
+
+      # -- List of IP addresses at which the CEEMS admission webhook service is available
+      # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
+      #
+      externalIPs: []
+
+    # -- Labels to add to the admission webhook deployment
+    #
+    labels: {}
+
+    # -- Annotations to add to the admission webhook deployment
+    #
+    annotations: {}
+
+    # -- Labels to add to the admission webhook pod
+    #
+    podLabels: {}
+
+    # -- Annotations to add to the admission webhook pod
+    #
+    podAnnotations: {}
+
+    # -- Assign a PriorityClassName to pods if set
+    priorityClassName: ""
+
+    # -- Liveness probe
+    #
+    livenessProbe:
+      enabled: true
+      failureThreshold: 3
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+
+    # -- Readiness probe
+    #
+    readinessProbe:
+      enabled: true
+      failureThreshold: 3
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+
+    # -- Resource limits & requests
+    #
+    resources: {}
+    # limits:
+    #   cpu: 200m
+    #   memory: 200Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 100Mi
+
+    # -- Define which Nodes the Pods are scheduled on.
+    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+    #
+    nodeSelector: {}
+
+    # -- Tolerations for use with node taints
+    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+    ##
+    tolerations: []
+    # - key: "key"
+    #   operator: "Equal"
+    #   value: "value"
+    #   effect: "NoSchedule"
+
+    # -- Assign custom affinity rules to the prometheus operator
+    # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+    #
+    affinity: {}
+    # nodeAffinity:
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #     - matchExpressions:
+    #       - key: kubernetes.io/e2e-az-name
+    #         operator: In
+    #         values:
+    #         - e2e-az1
+    #         - e2e-az2
+
+    dnsConfig: {}
+    # nameservers:
+    #   - 1.2.3.4
+    # searches:
+    #   - ns1.svc.cluster-domain.example
+    #   - my.dns.search.suffix
+    # options:
+    #   - name: ndots
+    #     value: "2"
+    #   - name: edns0
+
+    securityContext:
+      fsGroup: 65534
+      runAsGroup: 65534
+      runAsNonRoot: true
+      runAsUser: 65534
+      seccompProfile:
+        type: RuntimeDefault
+
+    # -- Container-specific security context configuration
+    # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+    #
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+
+    # -- If `false` then the user will opt out of automounting API credentials.
+    #
+    automountServiceAccountToken: true
+
+  patch:
+    # -- Enable patching webhook to configure TLS CA.
+    enabled: true
+    image:
+      registry: registry.k8s.io
+      repository: ingress-nginx/kube-webhook-certgen
+      tag: v1.6.5  # latest tag: https://github.com/kubernetes/ingress-nginx/blob/main/images/kube-webhook-certgen/TAG
+      sha: ""
+      pullPolicy: IfNotPresent
+    resources: {}
+    ## Provide a priority class name to the webhook patching job
+    ##
+    priorityClassName: ""
+    ttlSecondsAfterFinished: 60
+    annotations: {}
+    #   argocd.argoproj.io/hook: PreSync
+    #   argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    podAnnotations: {}
+    nodeSelector: {}
+    affinity: {}
+    tolerations: []
+
+    ## SecurityContext holds pod-level security attributes and common container settings.
+    ## This defaults to non root user with uid 2000 and gid 2000. *v1.PodSecurityContext  false
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+    ##
+    securityContext:
+      runAsGroup: 2000
+      runAsNonRoot: true
+      runAsUser: 2000
+      seccompProfile:
+        type: RuntimeDefault
+    ## Service account for Prometheus Operator Webhook Job Patch to use.
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+    ##
+    serviceAccount:
+      create: true
+      annotations: {}
+      automountServiceAccountToken: true
+
+  # Security context for create job container
+  createSecretJob:
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL
+
+    # Security context for patch job container
+  patchWebhookJob:
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL
+
+# -- CEEMS API server data config
+# Ref: https://ceems-dev.github.io/ceems/docs/configuration/config-reference#data_config
+#
+dataConfig:
+  path: /var/lib/ceems_api_server
+  retention_period: 30d
+  update_interval: 15m
+
+# -- CEEMS API server admin config
+# Ref: https://ceems-dev.github.io/ceems/docs/configuration/config-reference#admin_config
+#
+adminConfig:
+  users: []
+
+# -- CEEMS API server clusters
+# Ref: https://ceems-dev.github.io/ceems/docs/configuration/config-reference#cluster_config
+#
+# If `monitorCurrentCluster` is set to `true`, there is no need to add configuration for current
+# cluster. If custom config is needed for current cluster, set `monitorCurrentCluster` to `false`
+# and provide config for current cluster manually here.
+#
+clusters: []
+
+# -- CEEMS API server updaters
+# Ref: https://ceems-dev.github.io/ceems/docs/configuration/config-reference#updater_config
+#
+updaters: []
+
+# -- CEEMS API server web config
+# Ref: https://ceems-dev.github.io/ceems/docs/configuration/basic-auth#reference
+#
+webConfig: {}
+
+# -- Additional arguments for CEEMS API server
+# List of dicts with `name` and `value` fields. `value` field can be empty for
+# name only arguments.
+# For e.g., for `--log.level=debug` set the following
+#
+# @raw
+#
+# ```yaml
+# additionalArgs:
+#   - name: log.level
+#     value: debug
+# ```
+#
+additionalArgs: []
+#   - name: log.level
+#     value: debug
+
+# Configure kube-rbac-proxy
+kubeRBACProxy:
+  # -- When enabled, creates a kube-rbac-proxy to protect the ceems-api-server and ceems-api-server http endpoint.
+  # The requests are served through the same service but requests are HTTPS.
+  enabled: false
+  # -- Set environment variables as name/value pairs for kube-rbac-proxy
+  env: {}
+    # VARIABLE: value
+
+  image:
+    registry: quay.io
+    repository: brancz/kube-rbac-proxy
+    tag: v0.20.1
+    sha: ""
+    pullPolicy: IfNotPresent
+
+  # -- List of additional CLI arguments to configure kube-rbac-proxy
+  # for example: `--tls-cipher-suites`, `--log-file`, etc.
+  # All the possible args can be found here: https://github.com/brancz/kube-rbac-proxy#usage
+  #
+  # Arguments must be passed as list of dicts with `name` and `value`
+  # as fields of dict. `value` can be optional for name only arguments.
+  #
+  # @raw
+  #
+  # ```yaml
+  # additionalArgs:
+  #   - name: log-file
+  #     value: /path/to/log/file
+  # ```
+  #
+  additionalArgs: []
+
+  # -- Specify security settings for a Container.
+  # Allows overrides and additional options compared to (Pod) securityContext.
+  # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+  containerSecurityContext:
+    privileged: false
+    readOnlyRootFilesystem: true
+
+  # -- Specify the port used for the CEEMS API server container (upstream port)
+  port: 8020
+  # -- Specify the name of the container port
+  portName: http
+  # -- Configure a hostPort. If true, hostPort will be enabled in the container and set to service.port.
+  enableHostPort: false
+
+  # -- Configure Proxy Endpoints Port.
+  # This is the port being probed for readiness
+  proxyEndpointsPort: 8888
+  # -- Configure a hostPort. If true, hostPort will be enabled in the container and set to proxyEndpointsPort.
+  enableProxyEndpointsHostPort: false
+
+  # -- We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube.
+  resources: {}
+    ## If you do want to specify resources, uncomment the following
+    ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #  cpu: 100m
+    #  memory: 64Mi
+    # requests:
+    #  cpu: 10m
+    #  memory: 32Mi
+
+  # -- Additional volume mounts in the kube-rbac-proxy container.
+  extraVolumeMounts: []
+    # - name: extra-volume
+    #   mountPath: /extra
+    #   readOnly: true
+
+  # -- Enables using TLS resources from a volume on secret referred to in `tlsSecret`.
+  # When enabling `tlsClientAuth`, client CA certificate must be set in `tlsSecret.caItem`.
+  # Ref. https://github.com/brancz/kube-rbac-proxy/issues/187
+  tls:
+    enabled: false
+    tlsClientAuth: false
+
+tlsSecret:
+  # -- `tlsSecret` refers to an existing secret holding TLS items: client CA certificate, private key and certificate.
+  # `secretName` and `volumeName` can be templated.
+  # If enabled, volume `volumeName` gets created on secret `secretName`.
+  # The volume's resources will be used by kube-rbac-proxy if `kubeRBACProxy.tls.enabled` is set.
+  enabled: false
+  # -- Key with client CA certificate (optional)
+  caItem: ""
+  # -- Key with certificate
+  certItem: tls.crt
+  # -- Key with private key
+  keyItem: tls.key
+  # -- Name of an existing secret
+  secretName: ceems-api-server-tls
+  # -- Name of the volume to be created
+  volumeName: ceems-api-server-tls
+
+# Service configuration for CEEMS API server
+service:
+  # -- Creating a service is enabled by default
+  enabled: true
+
+  # -- Service type
+  type: ClusterIP
+  # -- IP address for type `ClusterIP`
+  clusterIP: ""
+  # -- Default service port. Sets the port of the exposed container as well (NE or kubeRBACProxy).
+  # Use "servicePort" below if changing the service port only is desired.
+  port: 9020
+  # -- Service port. Use this field if you wish to set a different service port
+  # without changing the container port ("port" above).
+  servicePort: ""
+  # -- (int or string) Targeted port in the pod. Must refer to an open container port (`port` or `portName`).
+  targetPort: 9020
+  # -- Name of the service port. Sets the port name of the main container (NE) as well.
+  portName: metrics
+  # -- Port number for service type `NodePort`
+  nodePort: null
+
+  # -- If true, CEEMS API server will listen on all interfaces
+  listenOnAllInterfaces: true
+
+  # -- Additional annotations and labels for the service
+  annotations: {}
+  labels: {}
+
+  # -- Dual stack settings for the service
+  # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+  ipDualStack:
+    enabled: false
+    ipFamilies: ["IPv6", "IPv4"]
+    ipFamilyPolicy: "PreferDualStack"
+
+  # -- External traffic policy setting (Cluster, Local)
+  # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#traffic-policies
+  externalTrafficPolicy: ""
+  # -- Internal traffic policy setting (Cluster, Local)
+  # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#traffic-policies
+  internalTrafficPolicy: ""
+
+# -- Set a NetworkPolicy with:
+# ingress only on service.port or custom policy
+networkPolicy:
+  enabled: false
+
+  # ingress:
+  # - {}
+
+  # egress:
+  # - {}
+
+# -- Additional environment variables that will be passed to the deployment
+env: {}
+#  env:
+#    VARIABLE: value
+
+# -- Customize the `updateStrategy` if set
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+
+# -- We usually recommend not to specify default resources and to leave this as a conscious
+# choice for the user. This also increases chances charts run on environments with little
+# resources, such as Minikube.
+resources: {}
+  ## If you do want to specify resources, uncomment the following
+  ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 200m
+  #   memory: 50Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 30Mi
+
+# Enable persistence using Persistent Volume Claims
+# Ref: https://kubernetes.io/docs/user-guide/persistent-volumes/
+#
+persistence:
+  # -- Enable persistant volumes
+  enabled: false
+  # -- Type of persistence volume: `pvc` or `statefulset`
+  type: pvc
+  # -- storageClassName: default
+  # (Optional) Use this to bind the claim to an existing PersistentVolume (PV) by name.
+  volumeName: ""
+  # -- PV access modes.
+  accessModes:
+    - ReadWriteOnce
+  # -- Size of PV.
+  size: 10Gi
+  # -- annotations: {}
+  finalizers:
+    - kubernetes.io/pvc-protection
+  # selectorLabels: {}
+  ## -- Sub-directory of the PV to mount. Can be templated.
+  # subPath: ""
+  ## -- Name of an existing PVC. Can be templated.
+  # existingClaim:
+  # -- Extra labels to apply to a PVC.
+  extraPvcLabels: {}
+  disableWarning: false
+
+  # -- If `persistence` is not enabled, this allows to mount the
+  # local storage in-memory to improve performance
+  #
+  inMemory:
+    enabled: false
+    ## The maximum usage on memory medium EmptyDir would be
+    ## the minimum value between the SizeLimit specified
+    ## here and the sum of memory limits of all containers in a pod
+    ##
+    # sizeLimit: 300Mi
+
+  # -- If `lookupVolumeName` is set to `true`, Helm will attempt to retrieve
+  # the current value of `spec.volumeName` and incorporate it into the template.
+  lookupVolumeName: true
+
+# -- Specify the container restart policy passed to the CEEMS API server container
+# Possible Values: `Always|OnFailure|Never`. Default value is `Always`.
+restartPolicy: null
+
+serviceAccount:
+  # -- Specifies whether a `ServiceAccount` should be created
+  create: true
+  # -- The name of the `ServiceAccount` to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name:
+  annotations: {}
+  imagePullSecrets: []
+  automountServiceAccountToken: true
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  runAsGroup: 65534
+
+containerSecurityContext:
+  privileged: false
+  readOnlyRootFilesystem: true
+  # capabilities:
+  #   add:
+  #   - SYS_TIME
+
+# -- Expose the service to the host network
+hostNetwork: false
+
+# -- Share the host process ID namespace
+hostPID: false
+
+# -- Share the host IPC namespace
+hostIPC: false
+
+# -- Assign a group of affinity scheduling rules
+#
+affinity: {}
+  # nodeAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #     nodeSelectorTerms:
+  #       - matchFields:
+  #           - key: metadata.name
+  #             operator: In
+  #             values:
+  #               - target-host-name
+
+# -- Annotations to be added to pods
+podAnnotations: {}
+
+# -- Extra labels to add to pods (can be templated)
+podLabels: {}
+
+# -- Annotations to be added to deployment
+deployAnnotations: {}
+
+# -- Custom DNS configuration to be added to pods
+dnsConfig: {}
+# nameservers:
+#   - 1.2.3.4
+# searches:
+#   - ns1.svc.cluster-domain.example
+#   - my.dns.search.suffix
+# options:
+#   - name: ndots
+#     value: "2"
+#   - name: edns0
+
+# -- Assign a `nodeSelector` if operating a hybrid cluster
+#
+nodeSelector:
+  kubernetes.io/os: linux
+  #  kubernetes.io/arch: amd64
+
+# -- (int) Specify grace period for graceful termination of pods. Defaults to 30 if null or not specified
+terminationGracePeriodSeconds: null
+
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
+
+# -- Enable or disable container termination message settings
+# Ref: https://kubernetes.io/docs/tasks/debug/debug-application/determine-reason-pod-failure/
+terminationMessageParams:
+  enabled: false
+  # -- If enabled, specify the path for termination messages
+  terminationMessagePath: /dev/termination-log
+  # -- If enabled, specify the policy for termination messages
+  terminationMessagePolicy: File
+
+# -- Assign a `PriorityClassName` to pods if set
+priorityClassName: ""
+
+# -- Additional mounts from the host to CEEMS API server container
+#
+extraHostVolumeMounts: []
+#  - name: <mountName>
+#    hostPath: <hostPath>
+#    https://kubernetes.io/docs/concepts/storage/volumes/#hostpath-volume-types
+#    type: "" (Default)|DirectoryOrCreate|Directory|FileOrCreate|File|Socket|CharDevice|BlockDevice
+#    mountPath: <mountPath>
+#    readOnly: true|false
+#    mountPropagation: None|HostToContainer|Bidirectional
+
+# -- Additional configmaps to be mounted.
+#
+configmaps: []
+# - name: <configMapName>
+#   mountPath: <mountPath>
+
+# -- Additional secrets to be mounted.
+#
+secrets: []
+# - name: <secretName>
+#   mountPath: <mountPatch>
+
+# -- Additional InitContainers to initialize the pod
+#
+extraInitContainers: []
+
+# -- Extra manifests to deploy as an array
+extraManifests: []
+  # - |
+  #   apiVersion: v1
+  #   kind: ConfigMap
+  #   metadata:
+  #     name: prometheus-extra
+  #   data:
+  #     extra-data: "value"
+
+# -- Extra volumes to become available in the pod
+extraVolumes: []
+  # - name: extra-volume
+  #   secret:
+  #     defaultMode: 420
+  #     optional: false
+  #     secretName: ceems-api-server-secret
+
+# -- Extra volume mounts in the CEEMS API server container
+extraVolumeMounts: []
+  # - name: extra-volume
+  #   mountPath: /extra
+  #   readOnly: true
+
+# -- Liveness probe
+#
+livenessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+
+# -- Readiness probe
+#
+readinessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+
+# -- Override version of app, required if image.tag is defined and does not follow semver
+version: ""

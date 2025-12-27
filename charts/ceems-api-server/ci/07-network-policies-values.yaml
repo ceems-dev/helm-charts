@@ -1,0 +1,16 @@
+---
+# This scenario shows how to use network policies to restrict
+# the access to CEEMS API server.
+
+# Enable network policy for CEEMS API server
+networkPolicy:
+  enabled: true
+  # Allow ingress from Grafana
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: grafana
+  # Allow ALL egress
+  egress:
+    - {}

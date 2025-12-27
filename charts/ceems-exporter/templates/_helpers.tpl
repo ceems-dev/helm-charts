@@ -103,8 +103,8 @@ Generate labels for ceems-exporter
 */}}
 {{- define "ceems-exporter.labels" -}}
 {{- include "ceems-exporter.common-labels" . }}
-app: {{ template "ceems-exporter.name" . }}-exporter
-app.kubernetes.io/name: {{ template "ceems-exporter.name" . }}-exporter
+app: {{ template "ceems-exporter.name" . }}
+app.kubernetes.io/name: {{ template "ceems-exporter.name" . }}
 app.kubernetes.io/component: ceems-prometheus-exporter
 {{- end }}
 
@@ -113,7 +113,7 @@ app.kubernetes.io/component: ceems-prometheus-exporter
 Generate selector labels for ceems-exporter
 */}}
 {{- define "ceems-exporter.selectorLabels" -}}
-app: {{ template "ceems-exporter.name" . }}-exporter
+app: {{ template "ceems-exporter.name" . }}
 release: {{ $.Release.Name | quote }}
 {{- end }}
 
