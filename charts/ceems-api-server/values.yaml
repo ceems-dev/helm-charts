@@ -58,24 +58,32 @@ global:
   # -- Allow parent charts to override registry hostname
   imageRegistry: ""
 
-# -- Monitor current k8s cluster. Setting it to `true` will auto configure CEEMS API server
-# and CEEMS LB (if enabled) with configuration corresponding to current cluster.
-# Note the deployment based on default values do not use any sort of authentication for
-# CEEMS exporter/CEEMS API server/CEEMS LB/Prometheus. If kube-rbac-proxy is enabled
-# for CEEMS components the configuration for different components needs to be setup
-# manually by using appropriate `Authorization` headers and cluster roles. In that
-# case, set this value to `false` and pass the configuration of different CEEMS components
-# using corresponding values in chart.
+# -- Monitoring related configuraton for the current k8s cluster.
 #
-monitorCurrentCluster: true
+monitoring:
+  # -- Monitor current k8s cluster. Setting it to `true` will auto configure CEEMS API server
+  # with configuration corresponding to current cluster.
+  # Note the deployment based on default values do not use any sort of authentication for
+  # CEEMS exporter/CEEMS API server/CEEMS LB/Prometheus. If kube-rbac-proxy is enabled
+  # for CEEMS components the configuration for different components needs to be setup
+  # manually by using appropriate `Authorization` headers and cluster roles. In that
+  # case, set this value to `false` and pass the configuration of different CEEMS components
+  # using corresponding values in chart.
+  #
+  enabled: true
 
-# -- Current cluster ID for CEEMS.
-# When `monitorCurrentCluster` is set to `true` and `clusterID` is empty
-# a default value of `ceems-k8s-0` will be used. To have a more
-# human readable cluster ID we recommend users to set this to unique
-# value.
-#
-clusterID: ""
+  # -- Current cluster ID for CEEMS.
+  # When `monitorCurrentCluster` is set to `true` and `clusterID` is empty
+  # a default based on release name will be used. To have a more
+  # human readable cluster ID we recommend users to set this to unique
+  # value.
+  #
+  clusterID: ""
+
+  # -- Web config for TSDB updater, if available.
+  # Ref: https://ceems-dev.github.io/ceems/docs/configuration/config-reference#web_client_config
+  #
+  updaterWebConfig: {}
 
 imagePullSecrets: []
 # - name: "image-pull-secret"
@@ -379,6 +387,7 @@ updaters: []
 
 # -- CEEMS API server web config
 # Ref: https://ceems-dev.github.io/ceems/docs/configuration/basic-auth#reference
+#
 webConfig: {}
 
 # -- Additional arguments for CEEMS API server

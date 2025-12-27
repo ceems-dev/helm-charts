@@ -96,27 +96,7 @@ Formats imagePullSecrets. Input is (dict "Values" .Values "imagePullSecrets" .{s
 CEEMS current cluster id
 */}}
 {{- define "ceems-api-server.cluster-id" -}}
-{{- default (printf "%s-k8s-0" .Release.Name) .Values.clusterID }}
-{{- end }}
-
-{{/*
--------------------------------------------------------------------------------
-Templates copied from children charts for generating service URLs
--------------------------------------------------------------------------------
-*/}}
-
-{{/*
-kube-prometheus-stack fullname based on its default value
-*/}}
-{{- define "ceems-api-server.kube-prometheus-stack.fullname" -}}
-{{- printf "%s-kube-prometheus-stack" .Release.Name | trunc 26 | trimSuffix "-" -}}
-{{- end -}}
-
-{{/*
-Prometheus service URL
-*/}}
-{{- define "ceems-api-server.prometheus-svc-url" -}}
-http://{{ include "ceems-api-server.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "ceems-api-server.namespace" . }}:9090
+{{- default (printf "%s-k8s-0" .Release.Name) .Values.monitoring.clusterID }}
 {{- end }}
 
 {{/*
@@ -176,7 +156,7 @@ Create clusters config for ceems api server
 {{- $clusterids = append $clusterids $value.id }}
 - {{ tpl (toYaml $value) $  | indent 2 | trim }}
 {{- end -}}
-{{- if and .Values.monitorCurrentCluster (not (has $clusterid $clusterids)) }}
+{{- if and .Values.monitoring.enabled (not (has $clusterid $clusterids)) }}
 - id: {{ $clusterid }}
   manager: k8s
   updaters:
@@ -194,11 +174,10 @@ Create updaters config for ceems api server
 {{- $updaterids = append $updaterids $value.id }}
 - {{ tpl (toYaml $value) $  | indent 2 | trim }}
 {{- end -}}
-{{- if and .Values.monitorCurrentCluster (not (has $updaterid $updaterids)) }}
+{{- if and .Values.monitoring.enabled (not (has $updaterid $updaterids)) (not (empty .Values.monitoring.updaterWebConfig)) }}
 - id: {{ $updaterid }}
   updater: tsdb
-  web:
-    url: {{ include "ceems-api-server.prometheus-svc-url"  . }}
+  {{ tpl (toYaml .Values.monitoring.updaterWebConfig) $  | indent 2 | trim }}
 {{- end }}
 {{- end }}
 
@@ -223,11 +202,11 @@ ceems_api_server:
 {{- end }}
 {{- end }}
 {{- end }}
-{{- if or .Values.clusters .Values.monitorCurrentCluster }}
+{{- if or .Values.clusters .Values.monitoring.enabled }}
 clusters:
 {{- include "ceems-api-server.clusters-config" . }}
 {{- end }}
-{{- if or .Values.updaters .Values.monitorCurrentCluster }}
+{{- if or .Values.updaters (and .Values.monitoring.enabled (not (empty .Values.monitoring.updaterWebConfig))) }}
 updaters:
 {{- include "ceems-api-server.updaters-config" . }}
 {{- end }}

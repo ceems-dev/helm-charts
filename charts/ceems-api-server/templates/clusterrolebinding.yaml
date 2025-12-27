@@ -1,5 +1,5 @@
 {{- if .Values.rbac.create }}
-{{- if or .Values.kubeRBACProxy.enabled .Values.monitorCurrentCluster (gt (len .Values.rbac.extraClusterRoleRules) 0) }}
+{{- if or .Values.kubeRBACProxy.enabled .Values.monitoring.enabled (gt (len .Values.rbac.extraClusterRoleRules) 0) }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:

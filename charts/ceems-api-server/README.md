@@ -290,8 +290,30 @@ Allow parent charts to override registry hostname
 </td>
 		</tr>
 		<tr>
-			<td id="monitorCurrentCluster">
-              <div style="max-width: 250px;"><a href="./values.yaml#L70">monitorCurrentCluster</a></div>
+			<td id="monitoring">
+              <div style="max-width: 250px;"><a href="./values.yaml#L63">monitoring</a></div>
+            </td>
+            <td>
+object
+</td>
+			<td>
+				<div style="max-width: 250px;">
+<pre lang="json">
+{
+  "clusterID": "",
+  "enabled": true,
+  "updaterWebConfig": {}
+}
+</pre>
+</div>
+			</td>
+			<td>
+Monitoring related configuraton for the current k8s cluster.
+</td>
+		</tr>
+		<tr>
+			<td id="monitoring--enabled">
+              <div style="max-width: 250px;"><a href="./values.yaml#L73">monitoring.enabled</a></div>
             </td>
             <td>
 bool
@@ -304,12 +326,12 @@ true
 </div>
 			</td>
 			<td>
-Monitor current k8s cluster. Setting it to <code>true</code> will auto configure CEEMS API server and CEEMS LB (if enabled) with configuration corresponding to current cluster. Note the deployment based on default values do not use any sort of authentication for CEEMS exporter/CEEMS API server/CEEMS LB/Prometheus. If kube-rbac-proxy is enabled for CEEMS components the configuration for different components needs to be setup manually by using appropriate <code>Authorization</code> headers and cluster roles. In that case, set this value to <code>false</code> and pass the configuration of different CEEMS components using corresponding values in chart.
+Monitor current k8s cluster. Setting it to <code>true</code> will auto configure CEEMS API server with configuration corresponding to current cluster. Note the deployment based on default values do not use any sort of authentication for CEEMS exporter/CEEMS API server/CEEMS LB/Prometheus. If kube-rbac-proxy is enabled for CEEMS components the configuration for different components needs to be setup manually by using appropriate <code>Authorization</code> headers and cluster roles. In that case, set this value to <code>false</code> and pass the configuration of different CEEMS components using corresponding values in chart.
 </td>
 		</tr>
 		<tr>
-			<td id="clusterID">
-              <div style="max-width: 250px;"><a href="./values.yaml#L78">clusterID</a></div>
+			<td id="monitoring--clusterID">
+              <div style="max-width: 250px;"><a href="./values.yaml#L81">monitoring.clusterID</a></div>
             </td>
             <td>
 string
@@ -322,12 +344,30 @@ string
 </div>
 			</td>
 			<td>
-Current cluster ID for CEEMS. When <code>monitorCurrentCluster</code> is set to <code>true</code> and <code>clusterID</code> is empty a default value of `ceems-k8s-0` will be used. To have a more human readable cluster ID we recommend users to set this to unique value.
+Current cluster ID for CEEMS. When <code>monitorCurrentCluster</code> is set to <code>true</code> and <code>clusterID</code> is empty a default based on release name will be used. To have a more human readable cluster ID we recommend users to set this to unique value.
+</td>
+		</tr>
+		<tr>
+			<td id="monitoring--updaterWebConfig">
+              <div style="max-width: 250px;"><a href="./values.yaml#L86">monitoring.updaterWebConfig</a></div>
+            </td>
+            <td>
+object
+</td>
+			<td>
+				<div style="max-width: 250px;">
+<pre lang="json">
+{}
+</pre>
+</div>
+			</td>
+			<td>
+Web config for TSDB updater, if available. Ref: https://ceems-dev.github.io/ceems/docs/configuration/config-reference#web_client_config
 </td>
 		</tr>
 		<tr>
 			<td id="imagePullSecrets">
-              <div style="max-width: 250px;"><a href="./values.yaml#L80">imagePullSecrets</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L88">imagePullSecrets</a></div>
             </td>
             <td>
 list
@@ -345,7 +385,7 @@ list
 		</tr>
 		<tr>
 			<td id="revisionHistoryLimit">
-              <div style="max-width: 250px;"><a href="./values.yaml#L85">revisionHistoryLimit</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L93">revisionHistoryLimit</a></div>
             </td>
             <td>
 int
@@ -363,7 +403,7 @@ Number of old history to retain to allow rollback. Default Kubernetes value is s
 		</tr>
 		<tr>
 			<td id="rbac--create">
-              <div style="max-width: 250px;"><a href="./values.yaml#L89">rbac.create</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L97">rbac.create</a></div>
             </td>
             <td>
 bool
@@ -381,7 +421,7 @@ Create RBAC resources
 		</tr>
 		<tr>
 			<td id="rbac--extraClusterRoleRules">
-              <div style="max-width: 250px;"><a href="./values.yaml#L91">rbac.extraClusterRoleRules</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L99">rbac.extraClusterRoleRules</a></div>
             </td>
             <td>
 list
@@ -399,7 +439,7 @@ Any extra cluster roles to be added to CEEMS exporter.
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--enabled">
-              <div style="max-width: 250px;"><a href="./values.yaml#L104">admissionWebhooks.enabled</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L112">admissionWebhooks.enabled</a></div>
             </td>
             <td>
 bool
@@ -417,7 +457,7 @@ Enable admission webhook to add username annotations to pods.  Must be enabled w
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--timeoutSeconds">
-              <div style="max-width: 250px;"><a href="./values.yaml#L106">admissionWebhooks.timeoutSeconds</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L114">admissionWebhooks.timeoutSeconds</a></div>
             </td>
             <td>
 int
@@ -435,7 +475,7 @@ The default timeoutSeconds is 10 and the maximum value is 30.
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--caBundle">
-              <div style="max-width: 250px;"><a href="./values.yaml#L109">admissionWebhooks.caBundle</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L117">admissionWebhooks.caBundle</a></div>
             </td>
             <td>
 string
@@ -453,7 +493,7 @@ A PEM encoded CA bundle which will be used to validate the webhook's server cert
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--annotations">
-              <div style="max-width: 250px;"><a href="./values.yaml#L111">admissionWebhooks.annotations</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L119">admissionWebhooks.annotations</a></div>
             </td>
             <td>
 object
@@ -471,7 +511,7 @@ object
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--mutatingWebhookConfiguration--annotations">
-              <div style="max-width: 250px;"><a href="./values.yaml#L116">admissionWebhooks.mutatingWebhookConfiguration.annotations</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L124">admissionWebhooks.mutatingWebhookConfiguration.annotations</a></div>
             </td>
             <td>
 object
@@ -489,7 +529,7 @@ object
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--validatingWebhookConfiguration--annotations">
-              <div style="max-width: 250px;"><a href="./values.yaml#L120">admissionWebhooks.validatingWebhookConfiguration.annotations</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L128">admissionWebhooks.validatingWebhookConfiguration.annotations</a></div>
             </td>
             <td>
 object
@@ -507,7 +547,7 @@ object
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--replicas">
-              <div style="max-width: 250px;"><a href="./values.yaml#L126">admissionWebhooks.deployment.replicas</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L134">admissionWebhooks.deployment.replicas</a></div>
             </td>
             <td>
 int
@@ -525,7 +565,7 @@ Number of replicas
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--strategy">
-              <div style="max-width: 250px;"><a href="./values.yaml#L130">admissionWebhooks.deployment.strategy</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L138">admissionWebhooks.deployment.strategy</a></div>
             </td>
             <td>
 object
@@ -543,7 +583,7 @@ Strategy of the deployment
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--revisionHistoryLimit">
-              <div style="max-width: 250px;"><a href="./values.yaml#L134">admissionWebhooks.deployment.revisionHistoryLimit</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L142">admissionWebhooks.deployment.revisionHistoryLimit</a></div>
             </td>
             <td>
 int
@@ -561,7 +601,7 @@ Number of old replicasets to retain. The default value is 10, 0 will garbage-col
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--additionalArgs">
-              <div style="max-width: 250px;"><a href="./values.yaml#L138">admissionWebhooks.deployment.additionalArgs</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L146">admissionWebhooks.deployment.additionalArgs</a></div>
             </td>
             <td>
 list
@@ -579,7 +619,7 @@ Extra arguments to admission controller. List of dicts with <code>name</code> an
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--serviceAccount">
-              <div style="max-width: 250px;"><a href="./values.yaml#L143">admissionWebhooks.deployment.serviceAccount</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L151">admissionWebhooks.deployment.serviceAccount</a></div>
             </td>
             <td>
 object
@@ -602,7 +642,7 @@ Service account for CEEMS admission Webhook to use. Ref: https://kubernetes.io/d
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--service">
-              <div style="max-width: 250px;"><a href="./values.yaml#L151">admissionWebhooks.deployment.service</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L159">admissionWebhooks.deployment.service</a></div>
             </td>
             <td>
 object
@@ -637,7 +677,7 @@ Configuration for CEEMS admission Webhook service
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--service--nodePort">
-              <div style="max-width: 250px;"><a href="./values.yaml#L163">admissionWebhooks.deployment.service.nodePort</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L171">admissionWebhooks.deployment.service.nodePort</a></div>
             </td>
             <td>
 string
@@ -655,7 +695,7 @@ Port to expose on each node. Only used if `service.type` is <code>NodePort</code
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--service--additionalPorts">
-              <div style="max-width: 250px;"><a href="./values.yaml#L168">admissionWebhooks.deployment.service.additionalPorts</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L176">admissionWebhooks.deployment.service.additionalPorts</a></div>
             </td>
             <td>
 list
@@ -673,7 +713,7 @@ Additional ports to open for CEEMS admission Webhook service Ref: https://kubern
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--service--externalTrafficPolicy">
-              <div style="max-width: 250px;"><a href="./values.yaml#L172">admissionWebhooks.deployment.service.externalTrafficPolicy</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L180">admissionWebhooks.deployment.service.externalTrafficPolicy</a></div>
             </td>
             <td>
 string
@@ -691,7 +731,7 @@ Denotes if this Service desires to route external traffic to node-local or clust
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--service--type">
-              <div style="max-width: 250px;"><a href="./values.yaml#L177">admissionWebhooks.deployment.service.type</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L185">admissionWebhooks.deployment.service.type</a></div>
             </td>
             <td>
 string
@@ -709,7 +749,7 @@ Service type. Possible values are <code>NodePort</code>, <code>ClusterIP</code>,
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--service--externalIPs">
-              <div style="max-width: 250px;"><a href="./values.yaml#L182">admissionWebhooks.deployment.service.externalIPs</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L190">admissionWebhooks.deployment.service.externalIPs</a></div>
             </td>
             <td>
 list
@@ -727,7 +767,7 @@ List of IP addresses at which the CEEMS admission webhook service is available R
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--labels">
-              <div style="max-width: 250px;"><a href="./values.yaml#L186">admissionWebhooks.deployment.labels</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L194">admissionWebhooks.deployment.labels</a></div>
             </td>
             <td>
 object
@@ -745,7 +785,7 @@ Labels to add to the admission webhook deployment
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--annotations">
-              <div style="max-width: 250px;"><a href="./values.yaml#L190">admissionWebhooks.deployment.annotations</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L198">admissionWebhooks.deployment.annotations</a></div>
             </td>
             <td>
 object
@@ -763,7 +803,7 @@ Annotations to add to the admission webhook deployment
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--podLabels">
-              <div style="max-width: 250px;"><a href="./values.yaml#L194">admissionWebhooks.deployment.podLabels</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L202">admissionWebhooks.deployment.podLabels</a></div>
             </td>
             <td>
 object
@@ -781,7 +821,7 @@ Labels to add to the admission webhook pod
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--podAnnotations">
-              <div style="max-width: 250px;"><a href="./values.yaml#L198">admissionWebhooks.deployment.podAnnotations</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L206">admissionWebhooks.deployment.podAnnotations</a></div>
             </td>
             <td>
 object
@@ -799,7 +839,7 @@ Annotations to add to the admission webhook pod
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--priorityClassName">
-              <div style="max-width: 250px;"><a href="./values.yaml#L201">admissionWebhooks.deployment.priorityClassName</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L209">admissionWebhooks.deployment.priorityClassName</a></div>
             </td>
             <td>
 string
@@ -817,7 +857,7 @@ Assign a PriorityClassName to pods if set
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--livenessProbe">
-              <div style="max-width: 250px;"><a href="./values.yaml#L205">admissionWebhooks.deployment.livenessProbe</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L213">admissionWebhooks.deployment.livenessProbe</a></div>
             </td>
             <td>
 object
@@ -842,7 +882,7 @@ Liveness probe
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--readinessProbe">
-              <div style="max-width: 250px;"><a href="./values.yaml#L215">admissionWebhooks.deployment.readinessProbe</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L223">admissionWebhooks.deployment.readinessProbe</a></div>
             </td>
             <td>
 object
@@ -867,7 +907,7 @@ Readiness probe
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--resources">
-              <div style="max-width: 250px;"><a href="./values.yaml#L225">admissionWebhooks.deployment.resources</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L233">admissionWebhooks.deployment.resources</a></div>
             </td>
             <td>
 object
@@ -885,7 +925,7 @@ Resource limits & requests
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--nodeSelector">
-              <div style="max-width: 250px;"><a href="./values.yaml#L236">admissionWebhooks.deployment.nodeSelector</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L244">admissionWebhooks.deployment.nodeSelector</a></div>
             </td>
             <td>
 object
@@ -903,7 +943,7 @@ Define which Nodes the Pods are scheduled on. Ref: https://kubernetes.io/docs/co
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--tolerations">
-              <div style="max-width: 250px;"><a href="./values.yaml#L241">admissionWebhooks.deployment.tolerations</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L249">admissionWebhooks.deployment.tolerations</a></div>
             </td>
             <td>
 list
@@ -921,7 +961,7 @@ Tolerations for use with node taints Ref: https://kubernetes.io/docs/concepts/sc
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--affinity">
-              <div style="max-width: 250px;"><a href="./values.yaml#L250">admissionWebhooks.deployment.affinity</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L258">admissionWebhooks.deployment.affinity</a></div>
             </td>
             <td>
 object
@@ -939,7 +979,7 @@ Assign custom affinity rules to the prometheus operator Ref: https://kubernetes.
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--dnsConfig">
-              <div style="max-width: 250px;"><a href="./values.yaml#L261">admissionWebhooks.deployment.dnsConfig</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L269">admissionWebhooks.deployment.dnsConfig</a></div>
             </td>
             <td>
 object
@@ -957,7 +997,7 @@ object
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--securityContext--fsGroup">
-              <div style="max-width: 250px;"><a href="./values.yaml#L273">admissionWebhooks.deployment.securityContext.fsGroup</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L281">admissionWebhooks.deployment.securityContext.fsGroup</a></div>
             </td>
             <td>
 int
@@ -975,7 +1015,7 @@ int
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--securityContext--runAsGroup">
-              <div style="max-width: 250px;"><a href="./values.yaml#L274">admissionWebhooks.deployment.securityContext.runAsGroup</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L282">admissionWebhooks.deployment.securityContext.runAsGroup</a></div>
             </td>
             <td>
 int
@@ -993,7 +1033,7 @@ int
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--securityContext--runAsNonRoot">
-              <div style="max-width: 250px;"><a href="./values.yaml#L275">admissionWebhooks.deployment.securityContext.runAsNonRoot</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L283">admissionWebhooks.deployment.securityContext.runAsNonRoot</a></div>
             </td>
             <td>
 bool
@@ -1011,7 +1051,7 @@ true
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--securityContext--runAsUser">
-              <div style="max-width: 250px;"><a href="./values.yaml#L276">admissionWebhooks.deployment.securityContext.runAsUser</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L284">admissionWebhooks.deployment.securityContext.runAsUser</a></div>
             </td>
             <td>
 int
@@ -1029,7 +1069,7 @@ int
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--securityContext--seccompProfile--type">
-              <div style="max-width: 250px;"><a href="./values.yaml#L278">admissionWebhooks.deployment.securityContext.seccompProfile.type</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L286">admissionWebhooks.deployment.securityContext.seccompProfile.type</a></div>
             </td>
             <td>
 string
@@ -1047,7 +1087,7 @@ string
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--containerSecurityContext">
-              <div style="max-width: 250px;"><a href="./values.yaml#L283">admissionWebhooks.deployment.containerSecurityContext</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L291">admissionWebhooks.deployment.containerSecurityContext</a></div>
             </td>
             <td>
 object
@@ -1073,7 +1113,7 @@ Container-specific security context configuration Ref: https://kubernetes.io/doc
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--deployment--automountServiceAccountToken">
-              <div style="max-width: 250px;"><a href="./values.yaml#L292">admissionWebhooks.deployment.automountServiceAccountToken</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L300">admissionWebhooks.deployment.automountServiceAccountToken</a></div>
             </td>
             <td>
 bool
@@ -1091,7 +1131,7 @@ If <code>false</code> then the user will opt out of automounting API credentials
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--enabled">
-              <div style="max-width: 250px;"><a href="./values.yaml#L296">admissionWebhooks.patch.enabled</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L304">admissionWebhooks.patch.enabled</a></div>
             </td>
             <td>
 bool
@@ -1109,7 +1149,7 @@ Enable patching webhook to configure TLS CA.
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--image--registry">
-              <div style="max-width: 250px;"><a href="./values.yaml#L298">admissionWebhooks.patch.image.registry</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L306">admissionWebhooks.patch.image.registry</a></div>
             </td>
             <td>
 string
@@ -1127,7 +1167,7 @@ string
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--image--repository">
-              <div style="max-width: 250px;"><a href="./values.yaml#L299">admissionWebhooks.patch.image.repository</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L307">admissionWebhooks.patch.image.repository</a></div>
             </td>
             <td>
 string
@@ -1145,7 +1185,7 @@ string
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--image--tag">
-              <div style="max-width: 250px;"><a href="./values.yaml#L300">admissionWebhooks.patch.image.tag</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L308">admissionWebhooks.patch.image.tag</a></div>
             </td>
             <td>
 string
@@ -1163,7 +1203,7 @@ string
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--image--sha">
-              <div style="max-width: 250px;"><a href="./values.yaml#L301">admissionWebhooks.patch.image.sha</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L309">admissionWebhooks.patch.image.sha</a></div>
             </td>
             <td>
 string
@@ -1181,7 +1221,7 @@ string
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--image--pullPolicy">
-              <div style="max-width: 250px;"><a href="./values.yaml#L302">admissionWebhooks.patch.image.pullPolicy</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L310">admissionWebhooks.patch.image.pullPolicy</a></div>
             </td>
             <td>
 string
@@ -1199,7 +1239,7 @@ string
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--resources">
-              <div style="max-width: 250px;"><a href="./values.yaml#L303">admissionWebhooks.patch.resources</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L311">admissionWebhooks.patch.resources</a></div>
             </td>
             <td>
 object
@@ -1217,7 +1257,7 @@ object
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--priorityClassName">
-              <div style="max-width: 250px;"><a href="./values.yaml#L306">admissionWebhooks.patch.priorityClassName</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L314">admissionWebhooks.patch.priorityClassName</a></div>
             </td>
             <td>
 string
@@ -1235,7 +1275,7 @@ string
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--ttlSecondsAfterFinished">
-              <div style="max-width: 250px;"><a href="./values.yaml#L307">admissionWebhooks.patch.ttlSecondsAfterFinished</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L315">admissionWebhooks.patch.ttlSecondsAfterFinished</a></div>
             </td>
             <td>
 int
@@ -1253,7 +1293,7 @@ int
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--annotations">
-              <div style="max-width: 250px;"><a href="./values.yaml#L308">admissionWebhooks.patch.annotations</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L316">admissionWebhooks.patch.annotations</a></div>
             </td>
             <td>
 object
@@ -1271,7 +1311,7 @@ object
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--podAnnotations">
-              <div style="max-width: 250px;"><a href="./values.yaml#L311">admissionWebhooks.patch.podAnnotations</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L319">admissionWebhooks.patch.podAnnotations</a></div>
             </td>
             <td>
 object
@@ -1289,7 +1329,7 @@ object
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--nodeSelector">
-              <div style="max-width: 250px;"><a href="./values.yaml#L312">admissionWebhooks.patch.nodeSelector</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L320">admissionWebhooks.patch.nodeSelector</a></div>
             </td>
             <td>
 object
@@ -1307,7 +1347,7 @@ object
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--affinity">
-              <div style="max-width: 250px;"><a href="./values.yaml#L313">admissionWebhooks.patch.affinity</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L321">admissionWebhooks.patch.affinity</a></div>
             </td>
             <td>
 object
@@ -1325,7 +1365,7 @@ object
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--tolerations">
-              <div style="max-width: 250px;"><a href="./values.yaml#L314">admissionWebhooks.patch.tolerations</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L322">admissionWebhooks.patch.tolerations</a></div>
             </td>
             <td>
 list
@@ -1343,7 +1383,7 @@ list
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--securityContext--runAsGroup">
-              <div style="max-width: 250px;"><a href="./values.yaml#L321">admissionWebhooks.patch.securityContext.runAsGroup</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L329">admissionWebhooks.patch.securityContext.runAsGroup</a></div>
             </td>
             <td>
 int
@@ -1361,7 +1401,7 @@ int
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--securityContext--runAsNonRoot">
-              <div style="max-width: 250px;"><a href="./values.yaml#L322">admissionWebhooks.patch.securityContext.runAsNonRoot</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L330">admissionWebhooks.patch.securityContext.runAsNonRoot</a></div>
             </td>
             <td>
 bool
@@ -1379,7 +1419,7 @@ true
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--securityContext--runAsUser">
-              <div style="max-width: 250px;"><a href="./values.yaml#L323">admissionWebhooks.patch.securityContext.runAsUser</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L331">admissionWebhooks.patch.securityContext.runAsUser</a></div>
             </td>
             <td>
 int
@@ -1397,7 +1437,7 @@ int
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--securityContext--seccompProfile--type">
-              <div style="max-width: 250px;"><a href="./values.yaml#L325">admissionWebhooks.patch.securityContext.seccompProfile.type</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L333">admissionWebhooks.patch.securityContext.seccompProfile.type</a></div>
             </td>
             <td>
 string
@@ -1415,7 +1455,7 @@ string
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--serviceAccount--create">
-              <div style="max-width: 250px;"><a href="./values.yaml#L330">admissionWebhooks.patch.serviceAccount.create</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L338">admissionWebhooks.patch.serviceAccount.create</a></div>
             </td>
             <td>
 bool
@@ -1433,7 +1473,7 @@ true
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--serviceAccount--annotations">
-              <div style="max-width: 250px;"><a href="./values.yaml#L331">admissionWebhooks.patch.serviceAccount.annotations</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L339">admissionWebhooks.patch.serviceAccount.annotations</a></div>
             </td>
             <td>
 object
@@ -1451,7 +1491,7 @@ object
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patch--serviceAccount--automountServiceAccountToken">
-              <div style="max-width: 250px;"><a href="./values.yaml#L332">admissionWebhooks.patch.serviceAccount.automountServiceAccountToken</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L340">admissionWebhooks.patch.serviceAccount.automountServiceAccountToken</a></div>
             </td>
             <td>
 bool
@@ -1469,7 +1509,7 @@ true
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--createSecretJob--securityContext--allowPrivilegeEscalation">
-              <div style="max-width: 250px;"><a href="./values.yaml#L337">admissionWebhooks.createSecretJob.securityContext.allowPrivilegeEscalation</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L345">admissionWebhooks.createSecretJob.securityContext.allowPrivilegeEscalation</a></div>
             </td>
             <td>
 bool
@@ -1487,7 +1527,7 @@ false
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--createSecretJob--securityContext--readOnlyRootFilesystem">
-              <div style="max-width: 250px;"><a href="./values.yaml#L338">admissionWebhooks.createSecretJob.securityContext.readOnlyRootFilesystem</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L346">admissionWebhooks.createSecretJob.securityContext.readOnlyRootFilesystem</a></div>
             </td>
             <td>
 bool
@@ -1505,7 +1545,7 @@ true
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--createSecretJob--securityContext--capabilities--drop[0]">
-              <div style="max-width: 250px;"><a href="./values.yaml#L341">admissionWebhooks.createSecretJob.securityContext.capabilities.drop[0]</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L349">admissionWebhooks.createSecretJob.securityContext.capabilities.drop[0]</a></div>
             </td>
             <td>
 string
@@ -1523,7 +1563,7 @@ string
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patchWebhookJob--securityContext--allowPrivilegeEscalation">
-              <div style="max-width: 250px;"><a href="./values.yaml#L346">admissionWebhooks.patchWebhookJob.securityContext.allowPrivilegeEscalation</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L354">admissionWebhooks.patchWebhookJob.securityContext.allowPrivilegeEscalation</a></div>
             </td>
             <td>
 bool
@@ -1541,7 +1581,7 @@ false
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patchWebhookJob--securityContext--readOnlyRootFilesystem">
-              <div style="max-width: 250px;"><a href="./values.yaml#L347">admissionWebhooks.patchWebhookJob.securityContext.readOnlyRootFilesystem</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L355">admissionWebhooks.patchWebhookJob.securityContext.readOnlyRootFilesystem</a></div>
             </td>
             <td>
 bool
@@ -1559,7 +1599,7 @@ true
 		</tr>
 		<tr>
 			<td id="admissionWebhooks--patchWebhookJob--securityContext--capabilities--drop[0]">
-              <div style="max-width: 250px;"><a href="./values.yaml#L350">admissionWebhooks.patchWebhookJob.securityContext.capabilities.drop[0]</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L358">admissionWebhooks.patchWebhookJob.securityContext.capabilities.drop[0]</a></div>
             </td>
             <td>
 string
@@ -1577,7 +1617,7 @@ string
 		</tr>
 		<tr>
 			<td id="dataConfig">
-              <div style="max-width: 250px;"><a href="./values.yaml#L355">dataConfig</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L363">dataConfig</a></div>
             </td>
             <td>
 object
@@ -1599,7 +1639,7 @@ CEEMS API server data config Ref: https://ceems-dev.github.io/ceems/docs/configu
 		</tr>
 		<tr>
 			<td id="adminConfig">
-              <div style="max-width: 250px;"><a href="./values.yaml#L363">adminConfig</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L371">adminConfig</a></div>
             </td>
             <td>
 object
@@ -1619,7 +1659,7 @@ CEEMS API server admin config Ref: https://ceems-dev.github.io/ceems/docs/config
 		</tr>
 		<tr>
 			<td id="clusters">
-              <div style="max-width: 250px;"><a href="./values.yaml#L373">clusters</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L381">clusters</a></div>
             </td>
             <td>
 list
@@ -1637,7 +1677,7 @@ CEEMS API server clusters Ref: https://ceems-dev.github.io/ceems/docs/configurat
 		</tr>
 		<tr>
 			<td id="updaters">
-              <div style="max-width: 250px;"><a href="./values.yaml#L378">updaters</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L386">updaters</a></div>
             </td>
             <td>
 list
@@ -1655,7 +1695,7 @@ CEEMS API server updaters Ref: https://ceems-dev.github.io/ceems/docs/configurat
 		</tr>
 		<tr>
 			<td id="webConfig">
-              <div style="max-width: 250px;"><a href="./values.yaml#L382">webConfig</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L391">webConfig</a></div>
             </td>
             <td>
 object
@@ -1673,7 +1713,7 @@ CEEMS API server web config Ref: https://ceems-dev.github.io/ceems/docs/configur
 		</tr>
 		<tr>
 			<td id="additionalArgs">
-              <div style="max-width: 250px;"><a href="./values.yaml#L397">additionalArgs</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L406">additionalArgs</a></div>
             </td>
             <td>
 list
@@ -1698,7 +1738,7 @@ additionalArgs:
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--enabled">
-              <div style="max-width: 250px;"><a href="./values.yaml#L405">kubeRBACProxy.enabled</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L414">kubeRBACProxy.enabled</a></div>
             </td>
             <td>
 bool
@@ -1716,7 +1756,7 @@ When enabled, creates a kube-rbac-proxy to protect the ceems-api-server and ceem
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--env">
-              <div style="max-width: 250px;"><a href="./values.yaml#L407">kubeRBACProxy.env</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L416">kubeRBACProxy.env</a></div>
             </td>
             <td>
 object
@@ -1734,7 +1774,7 @@ Set environment variables as name/value pairs for kube-rbac-proxy
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--image--registry">
-              <div style="max-width: 250px;"><a href="./values.yaml#L411">kubeRBACProxy.image.registry</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L420">kubeRBACProxy.image.registry</a></div>
             </td>
             <td>
 string
@@ -1752,7 +1792,7 @@ string
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--image--repository">
-              <div style="max-width: 250px;"><a href="./values.yaml#L412">kubeRBACProxy.image.repository</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L421">kubeRBACProxy.image.repository</a></div>
             </td>
             <td>
 string
@@ -1770,7 +1810,7 @@ string
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--image--tag">
-              <div style="max-width: 250px;"><a href="./values.yaml#L413">kubeRBACProxy.image.tag</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L422">kubeRBACProxy.image.tag</a></div>
             </td>
             <td>
 string
@@ -1788,7 +1828,7 @@ string
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--image--sha">
-              <div style="max-width: 250px;"><a href="./values.yaml#L414">kubeRBACProxy.image.sha</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L423">kubeRBACProxy.image.sha</a></div>
             </td>
             <td>
 string
@@ -1806,7 +1846,7 @@ string
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--image--pullPolicy">
-              <div style="max-width: 250px;"><a href="./values.yaml#L415">kubeRBACProxy.image.pullPolicy</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L424">kubeRBACProxy.image.pullPolicy</a></div>
             </td>
             <td>
 string
@@ -1824,7 +1864,7 @@ string
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--additionalArgs">
-              <div style="max-width: 250px;"><a href="./values.yaml#L432">kubeRBACProxy.additionalArgs</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L441">kubeRBACProxy.additionalArgs</a></div>
             </td>
             <td>
 list
@@ -1849,7 +1889,7 @@ additionalArgs:
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--containerSecurityContext">
-              <div style="max-width: 250px;"><a href="./values.yaml#L437">kubeRBACProxy.containerSecurityContext</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L446">kubeRBACProxy.containerSecurityContext</a></div>
             </td>
             <td>
 object
@@ -1870,7 +1910,7 @@ Specify security settings for a Container. Allows overrides and additional optio
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--port">
-              <div style="max-width: 250px;"><a href="./values.yaml#L442">kubeRBACProxy.port</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L451">kubeRBACProxy.port</a></div>
             </td>
             <td>
 int
@@ -1888,7 +1928,7 @@ Specify the port used for the CEEMS API server container (upstream port)
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--portName">
-              <div style="max-width: 250px;"><a href="./values.yaml#L444">kubeRBACProxy.portName</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L453">kubeRBACProxy.portName</a></div>
             </td>
             <td>
 string
@@ -1906,7 +1946,7 @@ Specify the name of the container port
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--enableHostPort">
-              <div style="max-width: 250px;"><a href="./values.yaml#L446">kubeRBACProxy.enableHostPort</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L455">kubeRBACProxy.enableHostPort</a></div>
             </td>
             <td>
 bool
@@ -1924,7 +1964,7 @@ Configure a hostPort. If true, hostPort will be enabled in the container and set
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--proxyEndpointsPort">
-              <div style="max-width: 250px;"><a href="./values.yaml#L450">kubeRBACProxy.proxyEndpointsPort</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L459">kubeRBACProxy.proxyEndpointsPort</a></div>
             </td>
             <td>
 int
@@ -1942,7 +1982,7 @@ Configure Proxy Endpoints Port. This is the port being probed for readiness
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--enableProxyEndpointsHostPort">
-              <div style="max-width: 250px;"><a href="./values.yaml#L452">kubeRBACProxy.enableProxyEndpointsHostPort</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L461">kubeRBACProxy.enableProxyEndpointsHostPort</a></div>
             </td>
             <td>
 bool
@@ -1960,7 +2000,7 @@ Configure a hostPort. If true, hostPort will be enabled in the container and set
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--resources">
-              <div style="max-width: 250px;"><a href="./values.yaml#L457">kubeRBACProxy.resources</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L466">kubeRBACProxy.resources</a></div>
             </td>
             <td>
 object
@@ -1978,7 +2018,7 @@ We usually recommend not to specify default resources and to leave this as a con
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--extraVolumeMounts">
-              <div style="max-width: 250px;"><a href="./values.yaml#L468">kubeRBACProxy.extraVolumeMounts</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L477">kubeRBACProxy.extraVolumeMounts</a></div>
             </td>
             <td>
 list
@@ -1996,7 +2036,7 @@ Additional volume mounts in the kube-rbac-proxy container.
 		</tr>
 		<tr>
 			<td id="kubeRBACProxy--tls">
-              <div style="max-width: 250px;"><a href="./values.yaml#L476">kubeRBACProxy.tls</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L485">kubeRBACProxy.tls</a></div>
             </td>
             <td>
 object
@@ -2017,7 +2057,7 @@ Enables using TLS resources from a volume on secret referred to in <code>tlsSecr
 		</tr>
 		<tr>
 			<td id="tlsSecret--enabled">
-              <div style="max-width: 250px;"><a href="./values.yaml#L485">tlsSecret.enabled</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L494">tlsSecret.enabled</a></div>
             </td>
             <td>
 bool
@@ -2035,7 +2075,7 @@ false
 		</tr>
 		<tr>
 			<td id="tlsSecret--caItem">
-              <div style="max-width: 250px;"><a href="./values.yaml#L487">tlsSecret.caItem</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L496">tlsSecret.caItem</a></div>
             </td>
             <td>
 string
@@ -2053,7 +2093,7 @@ Key with client CA certificate (optional)
 		</tr>
 		<tr>
 			<td id="tlsSecret--certItem">
-              <div style="max-width: 250px;"><a href="./values.yaml#L489">tlsSecret.certItem</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L498">tlsSecret.certItem</a></div>
             </td>
             <td>
 string
@@ -2071,7 +2111,7 @@ Key with certificate
 		</tr>
 		<tr>
 			<td id="tlsSecret--keyItem">
-              <div style="max-width: 250px;"><a href="./values.yaml#L491">tlsSecret.keyItem</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L500">tlsSecret.keyItem</a></div>
             </td>
             <td>
 string
@@ -2089,7 +2129,7 @@ Key with private key
 		</tr>
 		<tr>
 			<td id="tlsSecret--secretName">
-              <div style="max-width: 250px;"><a href="./values.yaml#L493">tlsSecret.secretName</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L502">tlsSecret.secretName</a></div>
             </td>
             <td>
 string
@@ -2107,7 +2147,7 @@ Name of an existing secret
 		</tr>
 		<tr>
 			<td id="tlsSecret--volumeName">
-              <div style="max-width: 250px;"><a href="./values.yaml#L495">tlsSecret.volumeName</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L504">tlsSecret.volumeName</a></div>
             </td>
             <td>
 string
@@ -2125,7 +2165,7 @@ Name of the volume to be created
 		</tr>
 		<tr>
 			<td id="service--enabled">
-              <div style="max-width: 250px;"><a href="./values.yaml#L500">service.enabled</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L509">service.enabled</a></div>
             </td>
             <td>
 bool
@@ -2143,7 +2183,7 @@ Creating a service is enabled by default
 		</tr>
 		<tr>
 			<td id="service--type">
-              <div style="max-width: 250px;"><a href="./values.yaml#L503">service.type</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L512">service.type</a></div>
             </td>
             <td>
 string
@@ -2161,7 +2201,7 @@ Service type
 		</tr>
 		<tr>
 			<td id="service--clusterIP">
-              <div style="max-width: 250px;"><a href="./values.yaml#L505">service.clusterIP</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L514">service.clusterIP</a></div>
             </td>
             <td>
 string
@@ -2179,7 +2219,7 @@ IP address for type <code>ClusterIP</code>
 		</tr>
 		<tr>
 			<td id="service--port">
-              <div style="max-width: 250px;"><a href="./values.yaml#L508">service.port</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L517">service.port</a></div>
             </td>
             <td>
 int
@@ -2197,7 +2237,7 @@ Default service port. Sets the port of the exposed container as well (NE or kube
 		</tr>
 		<tr>
 			<td id="service--servicePort">
-              <div style="max-width: 250px;"><a href="./values.yaml#L511">service.servicePort</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L520">service.servicePort</a></div>
             </td>
             <td>
 string
@@ -2215,7 +2255,7 @@ Service port. Use this field if you wish to set a different service port without
 		</tr>
 		<tr>
 			<td id="service--targetPort">
-              <div style="max-width: 250px;"><a href="./values.yaml#L513">service.targetPort</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L522">service.targetPort</a></div>
             </td>
             <td>
 int or string
@@ -2233,7 +2273,7 @@ Targeted port in the pod. Must refer to an open container port (<code>port</code
 		</tr>
 		<tr>
 			<td id="service--portName">
-              <div style="max-width: 250px;"><a href="./values.yaml#L515">service.portName</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L524">service.portName</a></div>
             </td>
             <td>
 string
@@ -2251,7 +2291,7 @@ Name of the service port. Sets the port name of the main container (NE) as well.
 		</tr>
 		<tr>
 			<td id="service--nodePort">
-              <div style="max-width: 250px;"><a href="./values.yaml#L517">service.nodePort</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L526">service.nodePort</a></div>
             </td>
             <td>
 string
@@ -2269,7 +2309,7 @@ Port number for service type <code>NodePort</code>
 		</tr>
 		<tr>
 			<td id="service--listenOnAllInterfaces">
-              <div style="max-width: 250px;"><a href="./values.yaml#L520">service.listenOnAllInterfaces</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L529">service.listenOnAllInterfaces</a></div>
             </td>
             <td>
 bool
@@ -2287,7 +2327,7 @@ If true, CEEMS API server will listen on all interfaces
 		</tr>
 		<tr>
 			<td id="service--annotations">
-              <div style="max-width: 250px;"><a href="./values.yaml#L523">service.annotations</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L532">service.annotations</a></div>
             </td>
             <td>
 object
@@ -2305,7 +2345,7 @@ Additional annotations and labels for the service
 		</tr>
 		<tr>
 			<td id="service--labels">
-              <div style="max-width: 250px;"><a href="./values.yaml#L524">service.labels</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L533">service.labels</a></div>
             </td>
             <td>
 object
@@ -2323,7 +2363,7 @@ object
 		</tr>
 		<tr>
 			<td id="service--ipDualStack">
-              <div style="max-width: 250px;"><a href="./values.yaml#L528">service.ipDualStack</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L537">service.ipDualStack</a></div>
             </td>
             <td>
 object
@@ -2348,7 +2388,7 @@ Dual stack settings for the service Ref: https://kubernetes.io/docs/concepts/ser
 		</tr>
 		<tr>
 			<td id="service--externalTrafficPolicy">
-              <div style="max-width: 250px;"><a href="./values.yaml#L535">service.externalTrafficPolicy</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L544">service.externalTrafficPolicy</a></div>
             </td>
             <td>
 string
@@ -2366,7 +2406,7 @@ External traffic policy setting (Cluster, Local) Ref: https://kubernetes.io/docs
 		</tr>
 		<tr>
 			<td id="service--internalTrafficPolicy">
-              <div style="max-width: 250px;"><a href="./values.yaml#L538">service.internalTrafficPolicy</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L547">service.internalTrafficPolicy</a></div>
             </td>
             <td>
 string
@@ -2384,7 +2424,7 @@ Internal traffic policy setting (Cluster, Local) Ref: https://kubernetes.io/docs
 		</tr>
 		<tr>
 			<td id="networkPolicy">
-              <div style="max-width: 250px;"><a href="./values.yaml#L542">networkPolicy</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L551">networkPolicy</a></div>
             </td>
             <td>
 object
@@ -2404,7 +2444,7 @@ Set a NetworkPolicy with: ingress only on service.port or custom policy
 		</tr>
 		<tr>
 			<td id="env">
-              <div style="max-width: 250px;"><a href="./values.yaml#L552">env</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L561">env</a></div>
             </td>
             <td>
 object
@@ -2422,7 +2462,7 @@ Additional environment variables that will be passed to the deployment
 		</tr>
 		<tr>
 			<td id="updateStrategy">
-              <div style="max-width: 250px;"><a href="./values.yaml#L557">updateStrategy</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L566">updateStrategy</a></div>
             </td>
             <td>
 object
@@ -2445,7 +2485,7 @@ Customize the <code>updateStrategy</code> if set
 		</tr>
 		<tr>
 			<td id="resources">
-              <div style="max-width: 250px;"><a href="./values.yaml#L565">resources</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L574">resources</a></div>
             </td>
             <td>
 object
@@ -2463,7 +2503,7 @@ We usually recommend not to specify default resources and to leave this as a con
 		</tr>
 		<tr>
 			<td id="persistence--enabled">
-              <div style="max-width: 250px;"><a href="./values.yaml#L580">persistence.enabled</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L589">persistence.enabled</a></div>
             </td>
             <td>
 bool
@@ -2481,7 +2521,7 @@ Enable persistant volumes
 		</tr>
 		<tr>
 			<td id="persistence--type">
-              <div style="max-width: 250px;"><a href="./values.yaml#L582">persistence.type</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L591">persistence.type</a></div>
             </td>
             <td>
 string
@@ -2499,7 +2539,7 @@ Type of persistence volume: <code>pvc</code> or <code>statefulset</code>
 		</tr>
 		<tr>
 			<td id="persistence--volumeName">
-              <div style="max-width: 250px;"><a href="./values.yaml#L585">persistence.volumeName</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L594">persistence.volumeName</a></div>
             </td>
             <td>
 string
@@ -2517,7 +2557,7 @@ storageClassName: default (Optional) Use this to bind the claim to an existing P
 		</tr>
 		<tr>
 			<td id="persistence--accessModes">
-              <div style="max-width: 250px;"><a href="./values.yaml#L587">persistence.accessModes</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L596">persistence.accessModes</a></div>
             </td>
             <td>
 list
@@ -2537,7 +2577,7 @@ PV access modes.
 		</tr>
 		<tr>
 			<td id="persistence--size">
-              <div style="max-width: 250px;"><a href="./values.yaml#L590">persistence.size</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L599">persistence.size</a></div>
             </td>
             <td>
 string
@@ -2555,7 +2595,7 @@ Size of PV.
 		</tr>
 		<tr>
 			<td id="persistence--finalizers">
-              <div style="max-width: 250px;"><a href="./values.yaml#L592">persistence.finalizers</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L601">persistence.finalizers</a></div>
             </td>
             <td>
 list
@@ -2575,7 +2615,7 @@ annotations: {}
 		</tr>
 		<tr>
 			<td id="persistence--extraPvcLabels">
-              <div style="max-width: 250px;"><a href="./values.yaml#L600">persistence.extraPvcLabels</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L609">persistence.extraPvcLabels</a></div>
             </td>
             <td>
 object
@@ -2593,7 +2633,7 @@ Extra labels to apply to a PVC.
 		</tr>
 		<tr>
 			<td id="persistence--disableWarning">
-              <div style="max-width: 250px;"><a href="./values.yaml#L601">persistence.disableWarning</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L610">persistence.disableWarning</a></div>
             </td>
             <td>
 bool
@@ -2611,7 +2651,7 @@ false
 		</tr>
 		<tr>
 			<td id="persistence--inMemory">
-              <div style="max-width: 250px;"><a href="./values.yaml#L606">persistence.inMemory</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L615">persistence.inMemory</a></div>
             </td>
             <td>
 object
@@ -2631,7 +2671,7 @@ If <code>persistence</code> is not enabled, this allows to mount the local stora
 		</tr>
 		<tr>
 			<td id="persistence--lookupVolumeName">
-              <div style="max-width: 250px;"><a href="./values.yaml#L616">persistence.lookupVolumeName</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L625">persistence.lookupVolumeName</a></div>
             </td>
             <td>
 bool
@@ -2649,7 +2689,7 @@ If <code>lookupVolumeName</code> is set to <code>true</code>, Helm will attempt 
 		</tr>
 		<tr>
 			<td id="restartPolicy">
-              <div style="max-width: 250px;"><a href="./values.yaml#L620">restartPolicy</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L629">restartPolicy</a></div>
             </td>
             <td>
 string
@@ -2667,7 +2707,7 @@ Specify the container restart policy passed to the CEEMS API server container Po
 		</tr>
 		<tr>
 			<td id="serviceAccount--create">
-              <div style="max-width: 250px;"><a href="./values.yaml#L624">serviceAccount.create</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L633">serviceAccount.create</a></div>
             </td>
             <td>
 bool
@@ -2685,7 +2725,7 @@ Specifies whether a <code>ServiceAccount</code> should be created
 		</tr>
 		<tr>
 			<td id="serviceAccount--name">
-              <div style="max-width: 250px;"><a href="./values.yaml#L627">serviceAccount.name</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L636">serviceAccount.name</a></div>
             </td>
             <td>
 string
@@ -2703,7 +2743,7 @@ The name of the <code>ServiceAccount</code> to use. If not set and create is tru
 		</tr>
 		<tr>
 			<td id="serviceAccount--annotations">
-              <div style="max-width: 250px;"><a href="./values.yaml#L628">serviceAccount.annotations</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L637">serviceAccount.annotations</a></div>
             </td>
             <td>
 object
@@ -2721,7 +2761,7 @@ object
 		</tr>
 		<tr>
 			<td id="serviceAccount--imagePullSecrets">
-              <div style="max-width: 250px;"><a href="./values.yaml#L629">serviceAccount.imagePullSecrets</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L638">serviceAccount.imagePullSecrets</a></div>
             </td>
             <td>
 list
@@ -2739,7 +2779,7 @@ list
 		</tr>
 		<tr>
 			<td id="serviceAccount--automountServiceAccountToken">
-              <div style="max-width: 250px;"><a href="./values.yaml#L630">serviceAccount.automountServiceAccountToken</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L639">serviceAccount.automountServiceAccountToken</a></div>
             </td>
             <td>
 bool
@@ -2757,7 +2797,7 @@ true
 		</tr>
 		<tr>
 			<td id="securityContext--runAsNonRoot">
-              <div style="max-width: 250px;"><a href="./values.yaml#L633">securityContext.runAsNonRoot</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L642">securityContext.runAsNonRoot</a></div>
             </td>
             <td>
 bool
@@ -2775,7 +2815,7 @@ true
 		</tr>
 		<tr>
 			<td id="securityContext--runAsUser">
-              <div style="max-width: 250px;"><a href="./values.yaml#L634">securityContext.runAsUser</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L643">securityContext.runAsUser</a></div>
             </td>
             <td>
 int
@@ -2793,7 +2833,7 @@ int
 		</tr>
 		<tr>
 			<td id="securityContext--runAsGroup">
-              <div style="max-width: 250px;"><a href="./values.yaml#L635">securityContext.runAsGroup</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L644">securityContext.runAsGroup</a></div>
             </td>
             <td>
 int
@@ -2811,7 +2851,7 @@ int
 		</tr>
 		<tr>
 			<td id="containerSecurityContext--privileged">
-              <div style="max-width: 250px;"><a href="./values.yaml#L638">containerSecurityContext.privileged</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L647">containerSecurityContext.privileged</a></div>
             </td>
             <td>
 bool
@@ -2829,7 +2869,7 @@ false
 		</tr>
 		<tr>
 			<td id="containerSecurityContext--readOnlyRootFilesystem">
-              <div style="max-width: 250px;"><a href="./values.yaml#L639">containerSecurityContext.readOnlyRootFilesystem</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L648">containerSecurityContext.readOnlyRootFilesystem</a></div>
             </td>
             <td>
 bool
@@ -2847,7 +2887,7 @@ true
 		</tr>
 		<tr>
 			<td id="hostNetwork">
-              <div style="max-width: 250px;"><a href="./values.yaml#L645">hostNetwork</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L654">hostNetwork</a></div>
             </td>
             <td>
 bool
@@ -2865,7 +2905,7 @@ Expose the service to the host network
 		</tr>
 		<tr>
 			<td id="hostPID">
-              <div style="max-width: 250px;"><a href="./values.yaml#L648">hostPID</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L657">hostPID</a></div>
             </td>
             <td>
 bool
@@ -2883,7 +2923,7 @@ Share the host process ID namespace
 		</tr>
 		<tr>
 			<td id="hostIPC">
-              <div style="max-width: 250px;"><a href="./values.yaml#L651">hostIPC</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L660">hostIPC</a></div>
             </td>
             <td>
 bool
@@ -2901,7 +2941,7 @@ Share the host IPC namespace
 		</tr>
 		<tr>
 			<td id="affinity">
-              <div style="max-width: 250px;"><a href="./values.yaml#L655">affinity</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L664">affinity</a></div>
             </td>
             <td>
 object
@@ -2919,7 +2959,7 @@ Assign a group of affinity scheduling rules
 		</tr>
 		<tr>
 			<td id="podAnnotations">
-              <div style="max-width: 250px;"><a href="./values.yaml#L666">podAnnotations</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L675">podAnnotations</a></div>
             </td>
             <td>
 object
@@ -2937,7 +2977,7 @@ Annotations to be added to pods
 		</tr>
 		<tr>
 			<td id="podLabels">
-              <div style="max-width: 250px;"><a href="./values.yaml#L669">podLabels</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L678">podLabels</a></div>
             </td>
             <td>
 object
@@ -2955,7 +2995,7 @@ Extra labels to add to pods (can be templated)
 		</tr>
 		<tr>
 			<td id="deployAnnotations">
-              <div style="max-width: 250px;"><a href="./values.yaml#L672">deployAnnotations</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L681">deployAnnotations</a></div>
             </td>
             <td>
 object
@@ -2973,7 +3013,7 @@ Annotations to be added to deployment
 		</tr>
 		<tr>
 			<td id="dnsConfig">
-              <div style="max-width: 250px;"><a href="./values.yaml#L675">dnsConfig</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L684">dnsConfig</a></div>
             </td>
             <td>
 object
@@ -2991,7 +3031,7 @@ Custom DNS configuration to be added to pods
 		</tr>
 		<tr>
 			<td id="nodeSelector">
-              <div style="max-width: 250px;"><a href="./values.yaml#L688">nodeSelector</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L697">nodeSelector</a></div>
             </td>
             <td>
 object
@@ -3011,7 +3051,7 @@ Assign a <code>nodeSelector</code> if operating a hybrid cluster
 		</tr>
 		<tr>
 			<td id="terminationGracePeriodSeconds">
-              <div style="max-width: 250px;"><a href="./values.yaml#L693">terminationGracePeriodSeconds</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L702">terminationGracePeriodSeconds</a></div>
             </td>
             <td>
 int
@@ -3029,7 +3069,7 @@ Specify grace period for graceful termination of pods. Defaults to 30 if null or
 		</tr>
 		<tr>
 			<td id="tolerations[0]--effect">
-              <div style="max-width: 250px;"><a href="./values.yaml#L696">tolerations[0].effect</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L705">tolerations[0].effect</a></div>
             </td>
             <td>
 string
@@ -3047,7 +3087,7 @@ string
 		</tr>
 		<tr>
 			<td id="tolerations[0]--operator">
-              <div style="max-width: 250px;"><a href="./values.yaml#L697">tolerations[0].operator</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L706">tolerations[0].operator</a></div>
             </td>
             <td>
 string
@@ -3065,7 +3105,7 @@ string
 		</tr>
 		<tr>
 			<td id="terminationMessageParams">
-              <div style="max-width: 250px;"><a href="./values.yaml#L701">terminationMessageParams</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L710">terminationMessageParams</a></div>
             </td>
             <td>
 object
@@ -3087,7 +3127,7 @@ Enable or disable container termination message settings Ref: https://kubernetes
 		</tr>
 		<tr>
 			<td id="terminationMessageParams--terminationMessagePath">
-              <div style="max-width: 250px;"><a href="./values.yaml#L704">terminationMessageParams.terminationMessagePath</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L713">terminationMessageParams.terminationMessagePath</a></div>
             </td>
             <td>
 string
@@ -3105,7 +3145,7 @@ If enabled, specify the path for termination messages
 		</tr>
 		<tr>
 			<td id="terminationMessageParams--terminationMessagePolicy">
-              <div style="max-width: 250px;"><a href="./values.yaml#L706">terminationMessageParams.terminationMessagePolicy</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L715">terminationMessageParams.terminationMessagePolicy</a></div>
             </td>
             <td>
 string
@@ -3123,7 +3163,7 @@ If enabled, specify the policy for termination messages
 		</tr>
 		<tr>
 			<td id="priorityClassName">
-              <div style="max-width: 250px;"><a href="./values.yaml#L709">priorityClassName</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L718">priorityClassName</a></div>
             </td>
             <td>
 string
@@ -3141,7 +3181,7 @@ Assign a <code>PriorityClassName</code> to pods if set
 		</tr>
 		<tr>
 			<td id="extraHostVolumeMounts">
-              <div style="max-width: 250px;"><a href="./values.yaml#L713">extraHostVolumeMounts</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L722">extraHostVolumeMounts</a></div>
             </td>
             <td>
 list
@@ -3159,7 +3199,7 @@ Additional mounts from the host to CEEMS API server container
 		</tr>
 		<tr>
 			<td id="configmaps">
-              <div style="max-width: 250px;"><a href="./values.yaml#L724">configmaps</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L733">configmaps</a></div>
             </td>
             <td>
 list
@@ -3177,7 +3217,7 @@ Additional configmaps to be mounted.
 		</tr>
 		<tr>
 			<td id="secrets">
-              <div style="max-width: 250px;"><a href="./values.yaml#L730">secrets</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L739">secrets</a></div>
             </td>
             <td>
 list
@@ -3195,7 +3235,7 @@ Additional secrets to be mounted.
 		</tr>
 		<tr>
 			<td id="extraInitContainers">
-              <div style="max-width: 250px;"><a href="./values.yaml#L736">extraInitContainers</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L745">extraInitContainers</a></div>
             </td>
             <td>
 list
@@ -3213,7 +3253,7 @@ Additional InitContainers to initialize the pod
 		</tr>
 		<tr>
 			<td id="extraManifests">
-              <div style="max-width: 250px;"><a href="./values.yaml#L739">extraManifests</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L748">extraManifests</a></div>
             </td>
             <td>
 list
@@ -3231,7 +3271,7 @@ Extra manifests to deploy as an array
 		</tr>
 		<tr>
 			<td id="extraVolumes">
-              <div style="max-width: 250px;"><a href="./values.yaml#L749">extraVolumes</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L758">extraVolumes</a></div>
             </td>
             <td>
 list
@@ -3249,7 +3289,7 @@ Extra volumes to become available in the pod
 		</tr>
 		<tr>
 			<td id="extraVolumeMounts">
-              <div style="max-width: 250px;"><a href="./values.yaml#L757">extraVolumeMounts</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L766">extraVolumeMounts</a></div>
             </td>
             <td>
 list
@@ -3267,7 +3307,7 @@ Extra volume mounts in the CEEMS API server container
 		</tr>
 		<tr>
 			<td id="livenessProbe">
-              <div style="max-width: 250px;"><a href="./values.yaml#L764">livenessProbe</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L773">livenessProbe</a></div>
             </td>
             <td>
 object
@@ -3291,7 +3331,7 @@ Liveness probe
 		</tr>
 		<tr>
 			<td id="readinessProbe">
-              <div style="max-width: 250px;"><a href="./values.yaml#L773">readinessProbe</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L782">readinessProbe</a></div>
             </td>
             <td>
 object
@@ -3315,7 +3355,7 @@ Readiness probe
 		</tr>
 		<tr>
 			<td id="version">
-              <div style="max-width: 250px;"><a href="./values.yaml#L781">version</a></div>
+              <div style="max-width: 250px;"><a href="./values.yaml#L790">version</a></div>
             </td>
             <td>
 string
