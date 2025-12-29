@@ -1,3 +1,12 @@
 ---
 
 # This scenario uses default values of chart to deploy ceems-lb.
+
+# Default value has no backend. Define a dummy backend here for web server to start
+config:
+  strategy: round-robin
+  backends:
+    - id: default
+      tsdb:
+        - web:
+            url: http://prometheus:9090
