@@ -10,12 +10,3 @@
 webConfig:
   basic_auth_users:
     ceems: $2y$10$XdfIZZ7iibwGbyjniv6kcOPOTxH8lrCsXaljyBGubL.xLu1esjEpm
-
-grafana:
-  datasource:
-    create: true
-    # Create Grafana datasource for CEEMS API server using basic auth credentials
-    # as below (in plain text)
-    basicAuth:
-      username: ceems
-      password: ceems

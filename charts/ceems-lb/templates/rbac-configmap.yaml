@@ -1,0 +1,16 @@
+{{- if .Values.kubeRBACProxy.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "ceems-lb.fullname" . }}-rbac-config
+  namespace: {{ include "ceems-lb.namespace" . }}
+data:
+  config-file.yaml: |+
+    authorization:
+      resourceAttributes:
+        namespace: {{ template "ceems-lb.namespace" . }}
+        apiVersion: v1
+        resource: services
+        subresource: {{ template "ceems-lb.fullname" . }}
+        name: {{ template "ceems-lb.fullname" . }}
+{{- end }}
