@@ -1,0 +1,55 @@
+{{- if .Values.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ceems-lb.fullname" . }}
+  namespace: {{ include "ceems-lb.namespace" . }}
+  labels:
+    {{- include "ceems-lb.labels" $ | nindent 4 }}
+    {{- with .Values.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+{{- if .Values.service.ipDualStack.enabled }}
+  ipFamilies: {{ toYaml .Values.service.ipDualStack.ipFamilies | nindent 4 }}
+  ipFamilyPolicy: {{ .Values.service.ipDualStack.ipFamilyPolicy }}
+{{- end }}
+{{- if .Values.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.service.externalTrafficPolicy }}
+{{- end }}
+{{- if .Values.service.internalTrafficPolicy }}
+  internalTrafficPolicy: {{ .Values.service.internalTrafficPolicy }}
+{{- end }}
+  type: {{ .Values.service.type }}
+{{- if and (eq .Values.service.type "ClusterIP") .Values.service.clusterIP }}
+  clusterIP: "{{ .Values.service.clusterIP }}"
+{{- end }}
+  ports:
+    {{- $port := .Values.service.servicePort | default .Values.service.port }}
+    - port: {{ $port }}
+      {{- if ( and (eq .Values.service.type "NodePort" ) (not (empty .Values.service.nodePort)) ) }}
+      nodePort: {{ .Values.service.nodePort }}
+      {{- end }}
+      targetPort: {{ .Values.service.targetPort }}
+      protocol: TCP
+      name: {{ printf "%s-tsdb" .Values.service.portName | trunc 14 }}
+    {{- if (contains "pyroscope" (include "ceems-lb.backend-types" .)) }}
+    - port: {{ add $port 10 }}
+      {{- if ( and (eq .Values.service.type "NodePort" ) (not (empty .Values.service.nodePort)) ) }}
+      nodePort: {{ add .Values.service.nodePort 10 }}
+      {{- end }}
+      {{- if or (kindIs "float64" .Values.service.targetPort) (kindIs "int" .Values.service.targetPort) }}
+      targetPort: {{ add .Values.service.targetPort 10 }}
+      {{- else if kindIs "string" .Values.service.targetPort }}
+      targetPort: {{ printf "%s-pyroscope" .Values.service.targetPort | trunc 14 }}
+      {{- end }}
+      protocol: TCP
+      name: {{ printf "%s-pyroscope" .Values.service.portName | trunc 14 }}
+    {{- end }}
+  selector:
+    {{- include "ceems-lb.selectorLabels" . | nindent 4 }}
+{{- end }}

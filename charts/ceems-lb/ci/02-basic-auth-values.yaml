@@ -1,0 +1,22 @@
+---
+
+# This scenario uses basic auth for the CEEMS LB so that
+# any unauthorised access of CEEMS LB can be
+# avoided
+#
+
+# Default value has no backend. Define a dummy backend here for web server to start
+config:
+  strategy: round-robin
+  backends:
+    - id: myk8s-basic-auth
+      tsdb:
+        - web:
+            url: http://{{ include "ceems-lb.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "ceems-lb.namespace" . }}:9090
+
+# CEEMS LB web config
+# Username: ceems
+# Plain text password: ceems
+webConfig:
+  basic_auth_users:
+    ceems: $2y$10$XdfIZZ7iibwGbyjniv6kcOPOTxH8lrCsXaljyBGubL.xLu1esjEpm

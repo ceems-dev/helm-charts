@@ -24,3 +24,7 @@ charts/ceems-api-server/ci/03-tls-values.yaml:private-key:64
 charts/ceems-api-server/ci/05-kube-rbac-proxy-custom-certs-values.yaml:private-key:36
 /github/workspace/charts/ceems-api-server/ci/03-tls-values.yaml:private-key:64
 /github/workspace/charts/ceems-api-server/ci/05-kube-rbac-proxy-custom-certs-values.yaml:private-key:36
+charts/ceems-lb/ci/05-kube-rbac-proxy-custom-certs-values.yaml:private-key:21
+charts/ceems-lb/ci/03-tls-values.yaml:private-key:70
+/github/workspace/charts/ceems-lb/ci/05-kube-rbac-proxy-custom-certs-values.yaml:private-key:21
+/github/workspace/charts/ceems-lb/ci/03-tls-values.yaml:private-key:70

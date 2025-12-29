@@ -1,0 +1,18 @@
+{{- if .Values.rbac.create }}
+{{- if or .Values.kubeRBACProxy.enabled (gt (len .Values.rbac.extraClusterRoleRules) 0) }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    {{- include "ceems-lb.labels" . | nindent 4 }}
+  name: {{ template "ceems-lb.fullname" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ template "ceems-lb.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ template "ceems-lb.serviceAccountName" . }}
+  namespace: {{ template "ceems-lb.namespace" . }}
+{{- end }}
+{{- end }}

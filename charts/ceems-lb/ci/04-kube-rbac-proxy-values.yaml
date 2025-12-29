@@ -1,0 +1,30 @@
+---
+# This scenario uses kube RBAC proxy for the CEEMS LB so that
+# any unauthorised access of CEEMS LB can be
+# avoided.
+#
+
+# Enable kube RBAC proxy
+kubeRBACProxy:
+  enabled: true
+
+# A role to be able to query Prometheus
+# that is behind kube RBAC proxy
+rbac:
+  extraClusterRoleRules:
+    - apiGroups: [""]
+      resources:
+        - services/ceems-ceems-lb-prometheus
+      verbs: ["get"]
+
+# Default value has no backend. Define a dummy backend here for web server to start
+config:
+  strategy: round-robin
+  backends:
+    - id: myk8s-kube-rbac-proxy
+      tsdb:
+        - web:
+            url: http://{{ include "ceems-lb.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "ceems-lb.namespace" . }}:10090
+      pyroscope:
+        - web:
+            url: http://{{ include "ceems-lb.pyroscope.fullname" . }}.{{ include "ceems-lb.namespace" . }}:4040
