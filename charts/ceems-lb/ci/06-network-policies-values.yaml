@@ -9,10 +9,10 @@ config:
     - id: myk8s-kube-rbac-proxy
       tsdb:
         - web:
-            url: http://{{ include "ceems-lb.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "ceems-lb.namespace" . }}:10090
+            url: http://prometheus.{{ include "ceems-lb.namespace" . }}:9090
       pyroscope:
         - web:
-            url: http://{{ include "ceems-lb.pyroscope.fullname" . }}.{{ include "ceems-lb.namespace" . }}:4040
+            url: http://pyroscope.{{ include "ceems-lb.namespace" . }}:4040
 
 # Enable network policy for CEEMS LB
 networkPolicy:

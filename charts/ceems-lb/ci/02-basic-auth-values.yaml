@@ -12,7 +12,7 @@ config:
     - id: myk8s-basic-auth
       tsdb:
         - web:
-            url: http://{{ include "ceems-lb.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "ceems-lb.namespace" . }}:9090
+            url: http://prometheus.{{ include "ceems-lb.namespace" . }}:9090
 
 # CEEMS LB web config
 # Username: ceems
