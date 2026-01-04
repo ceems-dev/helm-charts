@@ -93,47 +93,6 @@ Formats imagePullSecrets. Input is (dict "Values" .Values "imagePullSecrets" .{s
 {{- end -}}
 
 {{/*
-CEEMS current cluster id
-*/}}
-{{- define "ceems-lb.cluster-id" -}}
-{{- default (printf "%s-k8s-0" .Release.Name) .Values.clusterID }}
-{{- end }}
-
-{{/*
--------------------------------------------------------------------------------
-Templates copied from children charts for generating service URLs
--------------------------------------------------------------------------------
-*/}}
-
-{{/*
-kube-prometheus-stack fullname based on its default value
-*/}}
-{{- define "ceems-lb.kube-prometheus-stack.fullname" -}}
-{{- printf "%s-kube-prometheus-stack" .Release.Name | trunc 26 | trimSuffix "-" -}}
-{{- end -}}
-
-{{/*
-Prometheus service URL
-*/}}
-{{- define "ceems-lb.prometheus-svc-url" -}}
-http://{{ include "ceems-lb.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "ceems-lb.namespace" . }}:9090
-{{- end }}
-
-{{/*
-Pyroscope fullname based on its default value
-*/}}
-{{- define "ceems-lb.pyroscope.fullname" -}}
-{{- printf "%s-pyroscope" .Release.Name | trunc 63 | trimSuffix "-" }}
-{{- end }}
-
-{{/*
-Pyroscope service URL
-*/}}
-{{- define "ceems-lb.pyroscope-svc-url" -}}
-http://{{ include "ceems-lb.pyroscope.fullname" . }}.{{ include "ceems-lb.namespace" . }}:4040
-{{- end }}
-
-{{/*
 -------------------------------------------------------------------------------
 CEEMS LB related helper variables
 -------------------------------------------------------------------------------
@@ -172,27 +131,9 @@ Create the name of the service account to use for ceems-lb
 Create config for ceems lb
 */}}
 {{- define "ceems-lb.config" -}}
-{{- $backendids := list -}}
-{{- $clusterid := (include "ceems-lb.cluster-id" .) -}}
+{{- with  .Values.config }}
 ceems_lb:
-  strategy: {{ default "round-robin" .Values.config.strategy }}
-{{- if or (hasKey .Values.config "backends") .Values.monitorCurrentCluster }}
-  backends:
-{{- range $_, $value := .Values.config.backends }}
-{{- $backendids = append $backendids $value.id }}
-  - {{ tpl (toYaml $value) $ | indent 4 | trim }}
-{{- end }}
-{{- if and (index .Values "ceems-api-server") (index .Values "ceems-api-server" "monitoring" "enabled") (not (has $clusterid $backendids)) }}
-  - id: {{ $clusterid }}
-    tsdb:
-      - web:
-          url: {{ include "ceems-lb.prometheus-svc-url" . }}
-{{- if and (index .Values "ceems-exporter" "eBPFProfiling" "enabled") (index .Values "pyroscopeServer" "enabled") }}
-    pyroscope:
-      - web:
-          url: {{ include "ceems-lb.pyroscope-svc-url" . }}
-{{- end }}
-{{- end }}
+{{ tpl (toYaml .) $ | indent 4 }}
 {{- end }}
 {{- if ne .Values.ceemsAPIServer.persistenceVolumeClaim "" }}
 ceems_api_server:
@@ -222,12 +163,6 @@ Backend server types for ceems lb
 {{- if (hasKey $value "pyroscope") }}
 {{- $backends = append $backends "pyroscope" -}}
 {{- end }}
-{{- end }}
-{{- end }}
-{{- if and (index .Values "ceems-api-server") (index .Values "ceems-api-server" "monitoring" "enabled") }}
-{{- $backends = append $backends "tsdb" -}}
-{{- if and (index .Values "ceems-exporter" "eBPFProfiling" "enabled") (index .Values "pyroscopeServer" "enabled") }}
-{{- $backends = append $backends "pyroscope" -}}
 {{- end }}
 {{- end }}
 {{- $backends = $backends | uniq -}}
