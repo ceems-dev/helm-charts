@@ -344,7 +344,7 @@ string
 </div>
 			</td>
 			<td>
-Current cluster ID for CEEMS. When <code>monitorCurrentCluster</code> is set to <code>true</code> and <code>clusterID</code> is empty a default based on release name will be used. To have a more human readable cluster ID we recommend users to set this to unique value.
+Current cluster ID for CEEMS. When `monitoring.enabled` is set to <code>true</code> and <code>clusterID</code> is empty a default based on release name will be used. To have a more human readable cluster ID we recommend users to set this to unique value.
 </td>
 		</tr>
 		<tr>
@@ -1672,7 +1672,7 @@ list
 </div>
 			</td>
 			<td>
-CEEMS API server clusters Ref: https://ceems-dev.github.io/ceems/docs/configuration/config-reference#cluster_config  If <code>monitorCurrentCluster</code> is set to <code>true</code>, there is no need to add configuration for current cluster. If custom config is needed for current cluster, set <code>monitorCurrentCluster</code> to <code>false</code> and provide config for current cluster manually here.
+CEEMS API server clusters Ref: https://ceems-dev.github.io/ceems/docs/configuration/config-reference#cluster_config  If `monitoring.enabled` is set to <code>true</code>, there is no need to add configuration for current cluster. If custom config is needed for current cluster, set `monitoring.enabled` to <code>false</code> and provide config for current cluster manually here.
 </td>
 		</tr>
 		<tr>

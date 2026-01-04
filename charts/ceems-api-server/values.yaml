@@ -73,7 +73,7 @@ monitoring:
   enabled: true
 
   # -- Current cluster ID for CEEMS.
-  # When `monitorCurrentCluster` is set to `true` and `clusterID` is empty
+  # When `monitoring.enabled` is set to `true` and `clusterID` is empty
   # a default based on release name will be used. To have a more
   # human readable cluster ID we recommend users to set this to unique
   # value.
@@ -374,8 +374,8 @@ adminConfig:
 # -- CEEMS API server clusters
 # Ref: https://ceems-dev.github.io/ceems/docs/configuration/config-reference#cluster_config
 #
-# If `monitorCurrentCluster` is set to `true`, there is no need to add configuration for current
-# cluster. If custom config is needed for current cluster, set `monitorCurrentCluster` to `false`
+# If `monitoring.enabled` is set to `true`, there is no need to add configuration for current
+# cluster. If custom config is needed for current cluster, set `monitoring.enabled` to `false`
 # and provide config for current cluster manually here.
 #
 clusters: []

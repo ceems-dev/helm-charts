@@ -5,7 +5,6 @@ metadata:
   name: {{ template "ceems-api-server.fullname" . }}-admission-controller
   namespace: {{ template "ceems-api-server.namespace" . }}
   labels:
-    app: {{ template "ceems-api-server.name" . }}-admission-controller
     {{- include "ceems-api-server.admission.controller.labels" . | nindent 4 }}
 {{- if .Values.admissionWebhooks.deployment.labels }}
 {{ toYaml .Values.admissionWebhooks.deployment.labels | indent 4 }}
@@ -28,7 +27,6 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ template "ceems-api-server.name" . }}-admission-controller
         {{- include "ceems-api-server.admission.controller.labels" . | nindent 8 }}
 {{- if .Values.admissionWebhooks.deployment.podLabels }}
 {{ toYaml .Values.admissionWebhooks.deployment.podLabels | indent 8 }}

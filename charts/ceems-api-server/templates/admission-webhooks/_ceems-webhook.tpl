@@ -6,7 +6,6 @@
 {{/* Generate basic labels for webhook */}}
 {{- define "ceems-api-server.admission.webhook.labels" }}
 {{- include "ceems-api-server.common-labels" . }}
-app: {{ template "ceems-api-server.name" . }}-admission-webhook
 app.kubernetes.io/name: {{ template "ceems-api-server.name" . }}-admission-webhook
 app.kubernetes.io/component: ceems-webhook
 {{- end }}
