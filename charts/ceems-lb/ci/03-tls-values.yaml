@@ -13,7 +13,7 @@ config:
     - id: myk8s-mtls
       tsdb:
         - web:
-            url: http://{{ include "ceems-lb.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "ceems-lb.namespace" . }}:9090
+            url: http://prometheus.{{ include "ceems-lb.namespace" . }}:9090
 
 webConfig:
   # HTTP server web TLS config for CEEMS LB
