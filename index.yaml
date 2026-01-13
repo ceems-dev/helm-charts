@@ -241,6 +241,60 @@ entries:
           url: https://github.com/ceems-dev/ceems
     apiVersion: v2
     appVersion: 0.12.1
+    created: "2026-01-13T15:44:17.152090414Z"
+    dependencies:
+    - condition: kubePrometheusStack.enabled
+      import-values:
+      - child: grafana
+        parent: kubePrometheusStackGrafana
+      name: kube-prometheus-stack
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 80.13.*
+    - condition: pyroscopeServer.enabled
+      name: pyroscope
+      repository: https://grafana.github.io/helm-charts
+      version: 1.17.0
+    description: A Helm chart for deploying CEEMS
+    digest: e58cd1e4e576fc84b3a1a30a7695015b4011cac231d0cf25dadb138e2c34664d
+    home: https://ceems-dev.github.io/helm-charts/
+    icon: https://raw.githubusercontent.com/ceems-dev/ceems/main/website/static/img/logo.png
+    keywords:
+    - ceems-exporter
+    - ceems-api-server
+    - ceems-lb
+    - prometheus
+    - exporter
+    - ceems
+    - monitoring
+    - gpu
+    - nvidia
+    - amd
+    - energy
+    - emissions
+    - performance
+    - io
+    - network
+    - ebpf
+    maintainers:
+    - email: mahendra.paipuri@gmail.com
+      name: mahendrapaipuri
+      url: https://github.com/mahendrapaipuri
+    name: kube-ceems
+    sources:
+    - https://github.com/ceems-dev/helm-charts
+    type: application
+    urls:
+    - https://github.com/ceems-dev/helm-charts/releases/download/kube-ceems-0.30.0/kube-ceems-0.30.0.tgz
+    version: 0.30.0
+  - annotations:
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Chart Source
+          url: https://github.com/ceems-dev/helm-charts
+        - name: Upstream Project
+          url: https://github.com/ceems-dev/ceems
+    apiVersion: v2
+    appVersion: 0.12.1
     created: "2026-01-06T22:20:10.185896928Z"
     dependencies:
     - condition: kubePrometheusStack.enabled
@@ -1960,4 +2014,4 @@ entries:
     urls:
     - https://github.com/ceems-dev/helm-charts/releases/download/kube-ceems-0.1.1/kube-ceems-0.1.1.tgz
     version: 0.1.1
-generated: "2026-01-06T22:20:10.186178803Z"
+generated: "2026-01-13T15:44:17.152313922Z"
