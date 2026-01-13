@@ -248,7 +248,7 @@ ceemsExporter:
     image:
       registry: quay.io
       repository: brancz/kube-rbac-proxy
-      tag: v0.20.1
+      tag: v0.20.2
       sha: ""
       pullPolicy: IfNotPresent
 
@@ -1221,7 +1221,7 @@ ceemsAPIServer:
     image:
       registry: quay.io
       repository: brancz/kube-rbac-proxy
-      tag: v0.20.1
+      tag: v0.20.2
       sha: ""
       pullPolicy: IfNotPresent
 
@@ -1726,7 +1726,7 @@ ceemsLB:
     image:
       registry: quay.io
       repository: brancz/kube-rbac-proxy
-      tag: v0.20.1
+      tag: v0.20.2
       sha: ""
       pullPolicy: IfNotPresent
 
@@ -2114,7 +2114,7 @@ redfishProxy:
     image:
       registry: quay.io
       repository: brancz/kube-rbac-proxy
-      tag: v0.20.1
+      tag: v0.20.2
       sha: ""
       pullPolicy: IfNotPresent
 
