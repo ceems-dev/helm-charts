@@ -2,7 +2,7 @@
 
 # kube-ceems
 
-![Version: 0.38.1](https://img.shields.io/badge/Version-0.38.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.12.2](https://img.shields.io/badge/AppVersion-0.12.2-informational?style=flat-square)
+![Version: 0.38.2](https://img.shields.io/badge/Version-0.38.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.12.2](https://img.shields.io/badge/AppVersion-0.12.2-informational?style=flat-square)
 
 A Helm chart for deploying CEEMS
 
@@ -4554,7 +4554,7 @@ string
 			<td>
 				<div style="max-width: 250px;">
 <pre lang="json">
-"v1.6.6"
+"v1.6.7"
 </pre>
 </div>
 			</td>
