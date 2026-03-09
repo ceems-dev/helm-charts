@@ -2,7 +2,7 @@
 
 # ceems-api-server
 
-![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.12.3](https://img.shields.io/badge/AppVersion-0.12.3-informational?style=flat-square)
+![Version: 0.3.1](https://img.shields.io/badge/Version-0.3.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.12.3](https://img.shields.io/badge/AppVersion-0.12.3-informational?style=flat-square)
 
 A Helm chart for deploying CEEMS API server
 
@@ -1193,7 +1193,7 @@ string
 			<td>
 				<div style="max-width: 250px;">
 <pre lang="json">
-"v1.6.7"
+"v1.6.8"
 </pre>
 </div>
 			</td>
