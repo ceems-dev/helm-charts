@@ -2,7 +2,7 @@
 
 # ceems-lb
 
-![Version: 0.3.1](https://img.shields.io/badge/Version-0.3.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.12.3](https://img.shields.io/badge/AppVersion-0.12.3-informational?style=flat-square)
+![Version: 0.3.2](https://img.shields.io/badge/Version-0.3.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.12.3](https://img.shields.io/badge/AppVersion-0.12.3-informational?style=flat-square)
 
 A Helm chart for deploying CEEMS LB
 
@@ -561,7 +561,7 @@ string
 			<td>
 				<div style="max-width: 250px;">
 <pre lang="json">
-"v0.21.1"
+"v0.21.2"
 </pre>
 </div>
 			</td>
