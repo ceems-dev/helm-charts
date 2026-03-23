@@ -788,6 +788,42 @@ entries:
           url: https://github.com/ceems-dev/ceems
     apiVersion: v2
     appVersion: 0.12.3
+    created: "2026-03-23T14:05:03.551564729Z"
+    description: A Helm chart for deploying CEEMS LB
+    digest: dfd7b85aa82914e1cc036aad895187044ec880c65f71adbec185b86f4a05b381
+    home: https://ceems-dev.github.io/helm-charts/
+    icon: https://raw.githubusercontent.com/ceems-dev/ceems/main/website/static/img/logo.png
+    keywords:
+    - ceems-lb
+    - prometheus
+    - pyroscope
+    - ceems
+    - monitoring
+    - load-balancer
+    - access-control
+    - grafana
+    - energy
+    - emissions
+    maintainers:
+    - email: mahendra.paipuri@gmail.com
+      name: mahendrapaipuri
+      url: https://github.com/mahendrapaipuri
+    name: ceems-lb
+    sources:
+    - https://github.com/ceems-dev/helm-charts
+    type: application
+    urls:
+    - https://github.com/ceems-dev/helm-charts/releases/download/ceems-lb-0.3.2/ceems-lb-0.3.2.tgz
+    version: 0.3.2
+  - annotations:
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Chart Source
+          url: https://github.com/ceems-dev/helm-charts
+        - name: Upstream Project
+          url: https://github.com/ceems-dev/ceems
+    apiVersion: v2
+    appVersion: 0.12.3
     created: "2026-03-16T16:47:20.503519651Z"
     description: A Helm chart for deploying CEEMS LB
     digest: b9e5fd2a0c404ca8d164d8bb3517bacfc0a32eb9b79aed6703f19cd82ed11234
@@ -4056,4 +4092,4 @@ entries:
     urls:
     - https://github.com/ceems-dev/helm-charts/releases/download/kube-ceems-0.1.1/kube-ceems-0.1.1.tgz
     version: 0.1.1
-generated: "2026-03-23T14:00:39.420379707Z"
+generated: "2026-03-23T14:05:03.551754923Z"
