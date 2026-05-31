@@ -2,7 +2,7 @@
 # This scenario shows how to use network policies to restrict
 # the access to CEEMS components and Prometheus web server.
 
-ceemsExporter:
+ceems-exporter:
   collectors:
     emissions:
       deploy:
@@ -32,7 +32,7 @@ ceemsExporter:
     egress:
       - {}
 
-ceemsAPIServer:
+ceems-api-server:
   # Enable network policy for CEEMS API server
   networkPolicy:
     enabled: true
@@ -46,7 +46,7 @@ ceemsAPIServer:
     egress:
       - {}
 
-ceemsLB:
+ceems-lb:
   # Enable network policy for CEEMS LB
   networkPolicy:
     enabled: true

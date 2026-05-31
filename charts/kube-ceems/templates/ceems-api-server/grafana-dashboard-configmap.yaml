@@ -1,19 +1,22 @@
-{{- if and .Values.ceemsAPIServer.enabled .Values.ceemsAPIServer.grafana.dashboards.create }}
-{{- $ceemsAPIDSName := include "kube-ceems.api-server.fullname" . -}}
-{{- $ceemsPromDSName := $.Values.kubePrometheusStackGrafana.sidecar.datasources.name -}}
+{{- if and .Values.ceemsAPIServer.enabled (index .Values "ceems-api-server" "grafana" "dashboards" "create") }}
+{{- $ceemsAPIDSName := include "ceems-api-server.fullname" (index $.Subcharts "ceems-api-server") -}}
+{{- $ceemsPromDSName := (index $.Values "kube-prometheus-stack" "grafana" "sidecar" "datasources" "name") -}}
 {{- $ceemsPyroDSName := include "kube-ceems.pyroscope-ds-name" . -}}
 {{- $clusterids := list -}}
 {{- $clusterid := (include "kube-ceems.cluster-id" .) -}}
-{{- range $key, $value := .Values.ceemsAPIServer.clusters }}
+{{- range $key, $value := (index .Values "ceems-api-server" "clusters") }}
 {{- $clusterids = append $clusterids $value.id -}}
 {{- range $path, $_ :=  $.Files.Glob (printf "files/dashboards/%s/**.json" $value.manager) }}
-{{- if and $.Values.ceemsLB.enabled (hasKey $.Values.ceemsLB.config "backends") }}
-{{- range $_, $backend := $.Values.ceemsLB.config.backends }}
+{{- if and (not $.Values.pyroscopeServer.enabled) (contains "pyroscope" $path) }}
+{{- continue }}
+{{- end }}
+{{- if and $.Values.ceemsLB.enabled (hasKey (index $.Values "ceems-lb" "config") "backends") }}
+{{- range $_, $backend := index $.Values "ceems-lb" "config" "backends" }}
 {{- if and (eq $backend.id $value.id) (hasKey $backend "tsdb") }}
-{{- $ceemsPromDSName = printf "%s-%s-tsdb" (include "kube-ceems.lb.fullname" $) $value.id -}}
+{{- $ceemsPromDSName = printf "%s-%s-tsdb" (include "ceems-lb.fullname" (index $.Subcharts "ceems-lb")) $value.id -}}
 {{- end }}
 {{- if and (eq $backend.id $value.id) (hasKey $backend "pyroscope") }}
-{{- $ceemsPyroDSName = printf "%s-%s-pyroscope" (include "kube-ceems.lb.fullname" $) $value.id -}}
+{{- $ceemsPyroDSName = printf "%s-%s-pyroscope" (include "ceems-lb.fullname" (index $.Subcharts "ceems-lb")) $value.id -}}
 {{- end }}
 {{- end }}
 {{- end }}
@@ -21,52 +24,52 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "kube-ceems.api-server.fullname" $ }}-{{ $value.id }}-{{ $path | base | replace "." "-" }}-dashboard
-  namespace: {{ include "kube-ceems.api-server.namespace" $ }}
+  name: {{ template "ceems-api-server.fullname" (index $.Subcharts "ceems-api-server") }}-{{ $value.id }}-{{ $path | base | replace "." "-" }}-dashboard
+  namespace: {{ include "ceems-api-server.namespace" (index $.Subcharts "ceems-api-server") }}
   labels:
-    {{ tpl $.Values.kubePrometheusStackGrafana.sidecar.dashboards.label $ }}: {{ tpl $.Values.kubePrometheusStackGrafana.sidecar.dashboards.labelValue $ }}
-    {{- include "kube-ceems.api-server.labels" $ | nindent 4 }}
+    {{ tpl (index $.Values "kube-prometheus-stack" "grafana" "sidecar" "dashboards" "label") . }}: {{ tpl (index $.Values "kube-prometheus-stack" "grafana" "sidecar" "dashboards" "labelValue") . }}
+    {{- include "ceems-api-server.labels" (index $.Subcharts "ceems-api-server") | nindent 4 }}
   annotations:
-    {{ $.Values.kubePrometheusStackGrafana.sidecar.dashboards.folderAnnotation }}: CEEMS-ClusterID-{{ $value.id }}-Manager-{{ $value.manager }}
+    {{ index $.Values "kube-prometheus-stack" "grafana" "sidecar" "dashboards" "folderAnnotation" }}: CEEMS-ClusterID-{{ $value.id }}-Manager-{{ $value.manager }}
 data:
   {{ $path | base }}: |-
-    {{ $.Files.Get $path | replace "${VAR_ORG_ID}" "1" | replace "${DS_PROMETHEUS}" $ceemsPromDSName | replace "${DS_CEEMS-API}" $ceemsAPIDSName | replace "${DS_GRAFANA-PYROSCOPE-DATASOURCE}" $ceemsPyroDSName | replace "${VAR_CLUSTER_ID}" $value.id | replace "${VAR_ENDPOINT}" "" | nindent 4 }}
+    {{ $.Files.Get $path | replace "${VAR_ORGID}" "1" | replace "${DS_PROMETHEUS}" $ceemsPromDSName | replace "${DS_CEEMS-API}" $ceemsAPIDSName | replace "${DS_GRAFANA-PYROSCOPE-DATASOURCE}" $ceemsPyroDSName | replace "${VAR_CLUSTERID}" $value.id | replace "${VAR_ENDPOINT}" "" | nindent 4 }}
 {{- end }}
 {{- end }}
-{{- if and .Values.monitorCurrentCluster (not (has $clusterid $clusterids)) }}
+{{- if and (index .Values "ceems-api-server" "monitoring" "enabled") (not (has $clusterid $clusterids)) }}
 {{- range $path, $_ :=  $.Files.Glob "files/dashboards/k8s/**.json" }}
 {{- if $.Values.ceemsLB.enabled }}
-{{- $ceemsPromDSName = printf "%s-%s-tsdb" (include "kube-ceems.lb.fullname" $) $clusterid }}
-{{- $ceemsPyroDSName = printf "%s-%s-pyroscope" (include "kube-ceems.lb.fullname" $) $clusterid }}
+{{- $ceemsPromDSName = printf "%s-%s-tsdb" (include "ceems-lb.fullname" (index $.Subcharts "ceems-lb")) $clusterid }}
+{{- $ceemsPyroDSName = printf "%s-%s-pyroscope" (include "ceems-lb.fullname" (index $.Subcharts "ceems-lb")) $clusterid }}
 {{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "kube-ceems.api-server.fullname" $ }}-{{ $clusterid }}-{{ $path | base | replace "." "-" }}-dashboard
-  namespace: {{ include "kube-ceems.api-server.namespace" $ }}
+  name: {{ template "ceems-api-server.fullname" (index $.Subcharts "ceems-api-server") }}-{{ $clusterid }}-{{ $path | base | replace "." "-" }}-dashboard
+  namespace: {{ include "ceems-api-server.namespace" (index $.Subcharts "ceems-api-server") }}
   labels:
-    {{ tpl $.Values.kubePrometheusStackGrafana.sidecar.dashboards.label $ }}: {{ tpl $.Values.kubePrometheusStackGrafana.sidecar.dashboards.labelValue $ }}
-    {{- include "kube-ceems.api-server.labels" $ | nindent 4 }}
+    {{ tpl (index $.Values "kube-prometheus-stack" "grafana" "sidecar" "dashboards" "label") . }}: {{ tpl (index $.Values "kube-prometheus-stack" "grafana" "sidecar" "dashboards" "labelValue") . }}
+    {{- include "ceems-api-server.labels" (index $.Subcharts "ceems-api-server") | nindent 4 }}
   annotations:
-    {{ $.Values.kubePrometheusStackGrafana.sidecar.dashboards.folderAnnotation }}: CEEMS-ClusterID-{{ $clusterid }}-Manager-k8s
+    {{ index $.Values "kube-prometheus-stack" "grafana" "sidecar" "dashboards" "folderAnnotation" }}: CEEMS-ClusterID-{{ $clusterid }}-Manager-k8s
 data:
   {{ $path | base }}: |-
-    {{ $.Files.Get $path | replace "${VAR_ORG_ID}" "1" | replace "${DS_PROMETHEUS}" $ceemsPromDSName | replace "${DS_CEEMS-API}" $ceemsAPIDSName | replace "${DS_GRAFANA-PYROSCOPE-DATASOURCE}" $ceemsPyroDSName | replace "${VAR_CLUSTER_ID}" $clusterid | replace "${VAR_ENDPOINT}" "" | nindent 4 }}
+    {{ $.Files.Get $path | replace "${VAR_ORGID}" "1" | replace "${DS_PROMETHEUS}" $ceemsPromDSName | replace "${DS_CEEMS-API}" $ceemsAPIDSName | replace "${DS_GRAFANA-PYROSCOPE-DATASOURCE}" $ceemsPyroDSName | replace "${VAR_CLUSTERID}" $clusterid | replace "${VAR_ENDPOINT}" "" | nindent 4 }}
 {{- end }}
 {{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "kube-ceems.api-server.fullname" . }}-admin-dashboard
-  namespace: {{ include "kube-ceems.api-server.namespace" . }}
+  name: {{ template "ceems-api-server.fullname" (index $.Subcharts "ceems-api-server") }}-admin-dashboard
+  namespace: {{ include "ceems-api-server.namespace" (index $.Subcharts "ceems-api-server") }}
   labels:
-    {{ tpl $.Values.kubePrometheusStackGrafana.sidecar.dashboards.label $ }}: {{ tpl $.Values.kubePrometheusStackGrafana.sidecar.dashboards.labelValue $ }}
-    {{- include "kube-ceems.api-server.labels" . | nindent 4 }}
+    {{ tpl (index $.Values "kube-prometheus-stack" "grafana" "sidecar" "dashboards" "label") . }}: {{ tpl (index $.Values "kube-prometheus-stack" "grafana" "sidecar" "dashboards" "labelValue") . }}
+    {{- include "ceems-api-server.labels" (index $.Subcharts "ceems-api-server") | nindent 4 }}
   annotations:
-    {{ $.Values.kubePrometheusStackGrafana.sidecar.dashboards.folderAnnotation }}: CEEMS-Admin
+    {{ index $.Values "kube-prometheus-stack" "grafana" "sidecar" "dashboards" "folderAnnotation" }}: CEEMS-Admin
 data:
   cluster-status.json: |-
-    {{ $.Files.Get "files/dashboards/admin/cluster-status.json" | replace "${DS_PROMETHEUS}" .Values.kubePrometheusStackGrafana.sidecar.datasources.name | nindent 4 }}
+    {{ $.Files.Get "files/dashboards/admin/cluster-status.json" | replace "${DS_PROMETHEUS}" (index .Values "kube-prometheus-stack" "grafana" "sidecar" "datasources" "name") | nindent 4 }}
 {{- end }}

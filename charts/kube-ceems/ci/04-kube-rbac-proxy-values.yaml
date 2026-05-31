@@ -14,11 +14,7 @@
 # using load balancer and as it is highly environment dependent, it
 # is omitted here.
 
-# Use a human readable cluster ID as we need to provide CEEMS API server and LB
-# configs manually.
-clusterID: myk8s-kube-rbac-proxy
-
-ceemsExporter:
+ceems-exporter:
   # Enable eBPF profiling
   eBPFProfiling:
     enabled: true
@@ -27,7 +23,12 @@ ceemsExporter:
   kubeRBACProxy:
     enabled: true
 
-ceemsAPIServer:
+ceems-api-server:
+  monitoring:
+    # Use a human readable cluster ID as we need to provide CEEMS API server and LB
+    # configs manually.
+    clusterID: myk8s-kube-rbac-proxy
+
   # Enable kube RBAC proxy
   kubeRBACProxy:
     enabled: true
@@ -68,7 +69,7 @@ ceemsAPIServer:
     - id: myk8s-kube-rbac-proxy-tsdb
       updater: tsdb
       web:
-        url: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "kube-ceems.api-server.namespace" . }}:10090
+        url: https://{{ include "kube-ceems.prometheus-svc-host" . }}:10090
         # As CEEMS API server has necessary cluster role, we need to
         # use the token of service account to query Prometheus behind kube RBAC proxy
         authorization:
@@ -77,7 +78,7 @@ ceemsAPIServer:
         tls_config:
           insecure_skip_verify: true
 
-ceemsLB:
+ceems-lb:
   # Enable kube RBAC proxy
   kubeRBACProxy:
     enabled: true
@@ -114,7 +115,7 @@ ceemsLB:
           - web:
               # Prometheus server is exposed on non default 10090 port which is configured
               # as upstream port on kube RBAC proxy.
-              url: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "kube-ceems.lb.namespace" . }}:10090
+              url: https://{{ include "kube-ceems.prometheus-svc-host" . }}:10090
               # As CEEMS LB has necessary cluster role, we need to
               # use the token of service account to query Prometheus behind kube RBAC proxy
               authorization:
@@ -124,7 +125,7 @@ ceemsLB:
                 insecure_skip_verify: true
         pyroscope:
           - web:
-              url: http://{{ include "kube-ceems.pyroscope.fullname" . }}.{{ include "kube-ceems.namespace" . }}:4040
+              url: http://{{ include "kube-ceems.pyroscope-svc-host" . }}:4040
 
 kube-prometheus-stack:
   # Setup RBAC config for kube RBAC proxy for Prometheus.
@@ -155,7 +156,7 @@ kube-prometheus-stack:
       # Listen only on localhost so all requests must be passed through kube RBAC proxy
       listenLocal: true
       # Setup external URL which is different from default
-      externalUrl: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" . }}-prometheus.{{ template "kube-prometheus-stack.namespace" . }}:10090
+      externalUrl: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" (index .Subcharts "kube-prometheus-stack") }}-prometheus.{{ template "kube-prometheus-stack.namespace" (index .Subcharts "kube-prometheus-stack") }}:10090
       # Mount kube RBAC proxy role
       volumes:
         - name: kube-rbac-proxy-config
@@ -234,7 +235,7 @@ kube-prometheus-stack:
     additionalDataSources:
       - name: CEEMS-Prometheus
         type: prometheus
-        url: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "kube-prometheus-stack.namespace" . }}:10090
+        url: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" (index .Subcharts "kube-prometheus-stack") }}-prometheus.{{ include "kube-prometheus-stack.namespace" (index .Subcharts "kube-prometheus-stack") }}:10090
         access: proxy
         isDefault: false
         jsonData:

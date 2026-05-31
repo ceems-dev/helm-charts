@@ -8,7 +8,7 @@
 # the configuration is not provided. It can be protected using mTLS
 # or kube RBAC proxy as shown in other Values files in the folder.
 
-ceemsExporter:
+ceems-exporter:
   # CEEMS exporter web config
   # Username: ceems
   # Plain text password: ceems
@@ -37,14 +37,14 @@ ceemsExporter:
       kind: Secret
       metadata:
         name: kube-ceems-exporter-basic-auth-credentials
-        namespace: {{ include "kube-ceems.exporter.namespace" . }}
+        namespace: {{ include "ceems-exporter.namespace" (index .Subcharts "ceems-exporter") }}
         labels:
-          {{- include "kube-ceems.exporter.labels" . | nindent 4 }}
+          {{- include "ceems-exporter.labels" (index .Subcharts "ceems-exporter") | nindent 4 }}
       data:
         username: {{ b64enc "ceems" }}
         password: {{ b64enc "ceems" }}
 
-ceemsAPIServer:
+ceems-api-server:
   # CEEMS API server web config
   # Username: ceems
   # Plain text password: ceems
@@ -61,7 +61,7 @@ ceemsAPIServer:
         username: ceems
         password: ceems
 
-ceemsLB:
+ceems-lb:
   # CEEMS LB web config
   # Username: ceems
   # Plain text password: ceems

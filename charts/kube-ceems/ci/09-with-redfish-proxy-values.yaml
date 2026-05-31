@@ -5,7 +5,7 @@
 # NOTE that `redfishProxy` must be deployed on a management node that
 # has network access to redfish API servers.
 
-ceemsExporter:
+ceems-exporter:
   collectors:
     redfish:
       # Enable redfish collector
@@ -34,12 +34,12 @@ ceemsExporter:
         username: admin
         password: somesupersecret
 
-redfishProxy:
-  enabled: true
-
-  # Enable kube RBAC proxy. When enabled,
-  # the Redfish collector config will be
-  # automatically modified to include the
-  # auth token in the requests.
-  kubeRBACProxy:
+  redfishProxy:
     enabled: true
+
+    # Enable kube RBAC proxy. When enabled,
+    # the Redfish collector config will be
+    # automatically modified to include the
+    # auth token in the requests.
+    kubeRBACProxy:
+      enabled: true

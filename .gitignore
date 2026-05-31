@@ -25,5 +25,10 @@ go.work.sum
 .env
 
 # Ignore build artifacts
-.tarballs
-.pkgs
+*.tarballs
+*.pkgs
+*.tgz
+
+# Ignore YAML files in root
+/*.yaml
+/*.yml
