@@ -21,7 +21,7 @@ ceems-lb:
   # This claim name depends on storage class and must be modified
   # appropriately based on the storage class used.
   ceemsAPIServer:
-    persistenceVolumeClaim: storage-{{ include "kube-ceems.fullname" . }}-0
+    persistenceVolumeClaim: storage-{{ include "kube-ceems.ceems-api-server.fullname" . }}-0
 
 kube-prometheus-stack:
   prometheus:

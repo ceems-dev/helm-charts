@@ -106,6 +106,13 @@ Templates copied from children charts for generating service URLs
 */}}
 
 {{/*
+ceems-api-server fullname based on its default value
+*/}}
+{{- define "kube-ceems.ceems-api-server.fullname" -}}
+{{- printf "%s-ceems-api-server" .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
 kube-prometheus-stack fullname based on its default value
 */}}
 {{- define "kube-ceems.kube-prometheus-stack.fullname" -}}
