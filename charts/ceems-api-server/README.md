@@ -2,7 +2,7 @@
 
 # ceems-api-server
 
-![Version: 0.5.0](https://img.shields.io/badge/Version-0.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.13.0](https://img.shields.io/badge/AppVersion-0.13.0-informational?style=flat-square)
+![Version: 0.6.0](https://img.shields.io/badge/Version-0.6.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.13.0](https://img.shields.io/badge/AppVersion-0.13.0-informational?style=flat-square)
 
 A Helm chart for deploying CEEMS API server
 
@@ -1157,7 +1157,7 @@ string
 			<td>
 				<div style="max-width: 250px;">
 <pre lang="json">
-"registry.k8s.io"
+"ghcr.io"
 </pre>
 </div>
 			</td>
@@ -1175,7 +1175,7 @@ string
 			<td>
 				<div style="max-width: 250px;">
 <pre lang="json">
-"ingress-nginx/kube-webhook-certgen"
+"jkroepke/kube-webhook-certgen"
 </pre>
 </div>
 			</td>
@@ -1193,7 +1193,7 @@ string
 			<td>
 				<div style="max-width: 250px;">
 <pre lang="json">
-"v1.6.9"
+"1.8.3"
 </pre>
 </div>
 			</td>
