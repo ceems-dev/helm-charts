@@ -37,9 +37,7 @@ ceems-exporter:
       kind: Secret
       metadata:
         name: kube-ceems-exporter-basic-auth-credentials
-        namespace: {{ include "ceems-exporter.namespace" (index .Subcharts "ceems-exporter") }}
-        labels:
-          {{- include "ceems-exporter.labels" (index .Subcharts "ceems-exporter") | nindent 4 }}
+        namespace: {{ include "ceems-exporter.namespace" . }}
       data:
         username: {{ b64enc "ceems" }}
         password: {{ b64enc "ceems" }}
