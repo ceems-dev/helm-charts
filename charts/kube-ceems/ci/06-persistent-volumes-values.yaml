@@ -6,7 +6,7 @@
 # For sake of simplicity, local-path-provisioner (https://github.com/rancher/local-path-provisioner)
 # is used as it is practical to test is easily in CI.
 
-ceemsAPIServer:
+ceems-api-server:
   # Enable persistence for CEEMS API server
   persistence:
     enabled: true
@@ -16,12 +16,12 @@ ceemsAPIServer:
       - ReadWriteOnce
     size: 1Gi
 
-ceemsLB:
+ceems-lb:
   # Setup PVC for mounting CEEMS API server DB on CEEMS LB container.
   # This claim name depends on storage class and must be modified
   # appropriately based on the storage class used.
   ceemsAPIServer:
-    persistenceVolumeClaim: storage-{{ include "kube-ceems.api-server.fullname" . }}-0
+    persistenceVolumeClaim: storage-{{ include "kube-ceems.ceems-api-server.fullname" . }}-0
 
 kube-prometheus-stack:
   prometheus:

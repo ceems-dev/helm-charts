@@ -1,6 +1,0 @@
-{{- if .Values.redfishProxy.enabled }}
-{{ range .Values.redfishProxy.extraManifests }}
----
-{{ tpl . $ }}
-{{ end }}
-{{- end }}

@@ -17,11 +17,7 @@
 # using load balancer and as it is highly environment dependent, it
 # is omitted here.
 
-# Use a human readable cluster ID as we need to provide CEEMS API server and LB
-# configs manually.
-clusterID: myk8s-kube-rbac-proxy-cc
-
-ceemsExporter:
+ceems-exporter:
   # Enable eBPF profiling
   eBPFProfiling:
     enabled: true
@@ -52,7 +48,12 @@ ceemsExporter:
       metadata:
         name: kube-ceems-tls
 
-ceemsAPIServer:
+ceems-api-server:
+  monitoring:
+    # Use a human readable cluster ID as we need to provide CEEMS API server and LB
+    # configs manually.
+    clusterID: myk8s-kube-rbac-proxy-cc
+
   # Enable kube RBAC proxy and TLS
   kubeRBACProxy:
     enabled: true
@@ -102,7 +103,7 @@ ceemsAPIServer:
     - id: myk8s-kube-rbac-proxy-cc-tsdb
       updater: tsdb
       web:
-        url: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "kube-ceems.api-server.namespace" . }}:10090
+        url: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" . }}-prometheus.{{ include "kube-ceems.namespace" . }}:10090
         # As CEEMS API server has necessary cluster role, we need to
         # use the token of service account to query Prometheus behind kube RBAC proxy
         authorization:
@@ -111,7 +112,7 @@ ceemsAPIServer:
         tls_config:
           insecure_skip_verify: true
 
-ceemsLB:
+ceems-lb:
   # Enable kube RBAC proxy and TLS
   kubeRBACProxy:
     enabled: true
@@ -157,7 +158,7 @@ ceemsLB:
           - web:
               # Prometheus server is exposed on non default 10090 port which is configured
               # as upstream port on kube RBAC proxy.
-              url: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" . }}-prometheus.{{ template "kube-ceems.lb.namespace" . }}:10090
+              url: https://{{ include "kube-ceems.kube-prometheus-stack.fullname" . }}-prometheus.{{ template "kube-ceems.namespace" . }}:10090
               # As CEEMS LB has necessary cluster role, we need to
               # use the token of service account to query Prometheus behind kube RBAC proxy
               authorization:

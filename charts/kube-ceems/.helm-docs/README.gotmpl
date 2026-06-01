@@ -54,6 +54,9 @@ _See [helm install](https://helm.sh/docs/helm/helm_install/) for command documen
 
 By default this chart installs additional, dependent charts:
 
+* [ceems-dev/ceems-exporter](https://github.com/ceems-dev/helm-charts/tree/main/charts/ceems-exporter)
+* [ceems-dev/ceems-api-server](https://github.com/ceems-dev/helm-charts/tree/main/charts/ceems-api-server)
+* [ceems-dev/ceems-lb](https://github.com/ceems-dev/helm-charts/tree/main/charts/ceems-lb)
 * [prometheus-community/kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
 * [grafana/pyroscope](https://github.com/grafana/helm-charts/tree/main/charts/grafana)
 
@@ -101,7 +104,7 @@ are provided in the files.
 
 The same chart can be used to run multiple CEEMS instances in the same cluster if required. This makes sense when one control
 plane cluster is managing different workload clusters. To achieve this, it is necessary to run only one instance of Admission Webhook of
-CEEMS API server (`ceemsAPIServer.admissionWebhooks.enabled`) and one instance of prometheus-operator
+CEEMS API server (`ceems-api-server.admissionWebhooks.enabled`) and one instance of prometheus-operator
 (`kube-prometheus-stack.prometheusOperator.enabled`) from
 [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack). These two
 resources have cluster wide scope and having multiple running instances might have undesired effect.

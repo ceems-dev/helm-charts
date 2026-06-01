@@ -52,6 +52,8 @@ jobs:
 
       - name: Install test prerequisites
         if: steps.list-changed.outputs.changed == 'true'
+        env:
+          CHANGED_LIST: ${{ steps.list-changed.outputs.changed_list }}
         run: |
           # Install PV provider
           kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.31/deploy/local-path-storage.yaml
@@ -75,6 +77,14 @@ jobs:
           # Set perf_event_paranoid parameter to 0 for eBPF stuff to work
           sudo sysctl -w kernel.perf_event_paranoid=0
 
+          # Add ceems-dev/helm-charts repo for kube-ceems
+          echo "List is: $CHANGED_LIST"
+          if [ "$CHANGED_LIST" = '"charts/kube-ceems"' ]; then
+            helm repo add ceems-exporter https://ceems-dev.github.io/helm-charts
+            helm repo add ceems-api-server https://ceems-dev.github.io/helm-charts
+            helm repo add ceems-lb https://ceems-dev.github.io/helm-charts
+          fi
+          
       - name: Apply Gateway API CRDs
         if: steps.list-changed.outputs.changed == 'true'
         run: kubectl apply -k https://github.com/kubernetes-sigs/gateway-api/config/crd
