@@ -21,7 +21,7 @@ keywords:
   - network
   - ebpf
 type: application
-version: 1.7.0
+version: 1.7.1
 # renovate: github=ceems-dev/ceems
 appVersion: 0.14.1
 home: https://ceems-dev.github.io/helm-charts/
@@ -40,11 +40,11 @@ annotations:
       url: https://github.com/ceems-dev/ceems
 dependencies:
   - name: ceems-exporter
-    version: "0.6.0"
+    version: "0.6.1"
     repository: https://ceems-dev.github.io/helm-charts
     condition: ceemsExporter.enabled
   - name: ceems-api-server
-    version: "0.7.0"
+    version: "0.7.1"
     repository: https://ceems-dev.github.io/helm-charts
     condition: ceemsAPIServer.enabled
   - name: ceems-lb
