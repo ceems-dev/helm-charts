@@ -127,7 +127,7 @@ Prometheus service host
 {{- end }}
 
 {{/*
-Pyroscope fullname based on its default value
+Pyroscope fullname based on its default value in the parent chart
 */}}
 {{- define "kube-ceems.pyroscope.fullname" -}}
 {{- printf "%s-pyroscope" .Release.Name | trunc 63 | trimSuffix "-" }}
