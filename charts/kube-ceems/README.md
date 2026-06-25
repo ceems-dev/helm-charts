@@ -26,7 +26,7 @@ A Helm chart for deploying CEEMS
 | https://ceems-dev.github.io/helm-charts | ceems-exporter | 0.6.2 |
 | https://ceems-dev.github.io/helm-charts | ceems-lb | 0.6.2 |
 | https://grafana.github.io/helm-charts | pyroscope | 2.1.0 |
-| https://prometheus-community.github.io/helm-charts | kube-prometheus-stack | 86.3.* |
+| https://prometheus-community.github.io/helm-charts | kube-prometheus-stack | 87.0.* |
 
 <!-- textlint-enable -->
 

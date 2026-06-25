@@ -52,7 +52,7 @@ dependencies:
     repository: https://ceems-dev.github.io/helm-charts
     condition: ceemsLB.enabled
   - name: kube-prometheus-stack
-    version: "86.3.*"
+    version: "87.0.*"
     repository: https://prometheus-community.github.io/helm-charts
     condition: kubePrometheusStack.enabled
   - name: pyroscope
