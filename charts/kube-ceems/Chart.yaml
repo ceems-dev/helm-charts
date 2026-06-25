@@ -21,7 +21,7 @@ keywords:
   - network
   - ebpf
 type: application
-version: 1.8.1
+version: 1.8.2
 # renovate: github=ceems-dev/ceems
 appVersion: 0.14.3
 home: https://ceems-dev.github.io/helm-charts/
@@ -48,7 +48,7 @@ dependencies:
     repository: https://ceems-dev.github.io/helm-charts
     condition: ceemsAPIServer.enabled
   - name: ceems-lb
-    version: "0.6.2"
+    version: "0.6.3"
     repository: https://ceems-dev.github.io/helm-charts
     condition: ceemsLB.enabled
   - name: kube-prometheus-stack
