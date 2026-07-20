@@ -10,6 +10,44 @@ entries:
           url: https://github.com/ceems-dev/ceems
     apiVersion: v2
     appVersion: 0.14.4
+    created: "2026-07-20T15:49:42.318027579Z"
+    description: A Helm chart for deploying CEEMS API server
+    digest: 7b32a842f77f346cc511a4e8ccd8502c8f2f1e4001550149be135b7f05346641
+    home: https://ceems-dev.github.io/helm-charts/
+    icon: https://raw.githubusercontent.com/ceems-dev/ceems/main/website/static/img/logo.png
+    keywords:
+    - ceems-api-server
+    - ceems
+    - monitoring
+    - gpu
+    - nvidia
+    - amd
+    - energy
+    - emissions
+    - performance
+    - io
+    - network
+    - ebpf
+    maintainers:
+    - email: mahendra.paipuri@gmail.com
+      name: mahendrapaipuri
+      url: https://github.com/mahendrapaipuri
+    name: ceems-api-server
+    sources:
+    - https://github.com/ceems-dev/helm-charts
+    type: application
+    urls:
+    - https://github.com/ceems-dev/helm-charts/releases/download/ceems-api-server-0.7.6/ceems-api-server-0.7.6.tgz
+    version: 0.7.6
+  - annotations:
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Chart Source
+          url: https://github.com/ceems-dev/helm-charts
+        - name: Upstream Project
+          url: https://github.com/ceems-dev/ceems
+    apiVersion: v2
+    appVersion: 0.14.4
     created: "2026-07-05T22:00:10.542855193Z"
     description: A Helm chart for deploying CEEMS API server
     digest: f500c24b5e206cdef7f0906f69d78b40133fa232a8054353fea418a1be09fda5
@@ -8170,4 +8208,4 @@ entries:
     urls:
     - https://github.com/ceems-dev/helm-charts/releases/download/kube-ceems-0.1.1/kube-ceems-0.1.1.tgz
     version: 0.1.1
-generated: "2026-07-20T15:49:10.829613451Z"
+generated: "2026-07-20T15:49:42.318334624Z"
