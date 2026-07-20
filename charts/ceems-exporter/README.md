@@ -2,7 +2,7 @@
 
 # ceems-exporter
 
-![Version: 0.6.4](https://img.shields.io/badge/Version-0.6.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.14.4](https://img.shields.io/badge/AppVersion-0.14.4-informational?style=flat-square)
+![Version: 0.6.5](https://img.shields.io/badge/Version-0.6.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.14.4](https://img.shields.io/badge/AppVersion-0.14.4-informational?style=flat-square)
 
 A Helm chart for deploying CEEMS Exporter
 
@@ -1007,7 +1007,7 @@ string
 			<td>
 				<div style="max-width: 250px;">
 <pre lang="json">
-"v0.22.0"
+"v0.22.1"
 </pre>
 </div>
 			</td>
@@ -3865,7 +3865,7 @@ string
 			<td>
 				<div style="max-width: 250px;">
 <pre lang="json">
-"v0.22.0"
+"v0.22.1"
 </pre>
 </div>
 			</td>
