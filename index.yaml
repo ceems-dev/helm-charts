@@ -2065,6 +2065,70 @@ entries:
           url: https://github.com/ceems-dev/ceems
     apiVersion: v2
     appVersion: 0.14.4
+    created: "2026-07-23T02:55:50.110156012Z"
+    dependencies:
+    - condition: ceemsExporter.enabled
+      name: ceems-exporter
+      repository: https://ceems-dev.github.io/helm-charts
+      version: 0.6.5
+    - condition: ceemsAPIServer.enabled
+      name: ceems-api-server
+      repository: https://ceems-dev.github.io/helm-charts
+      version: 0.7.6
+    - condition: ceemsLB.enabled
+      name: ceems-lb
+      repository: https://ceems-dev.github.io/helm-charts
+      version: 0.6.5
+    - condition: kubePrometheusStack.enabled
+      name: kube-prometheus-stack
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 87.19.*
+    - condition: pyroscopeServer.enabled
+      name: pyroscope
+      repository: https://grafana.github.io/helm-charts
+      version: 2.2.0
+    description: A Helm chart for deploying CEEMS
+    digest: ea7e5cd00a1175230499c4d879798924efc94c2cf53605c0c589a9952241f1ca
+    home: https://ceems-dev.github.io/helm-charts/
+    icon: https://raw.githubusercontent.com/ceems-dev/ceems/main/website/static/img/logo.png
+    keywords:
+    - ceems-exporter
+    - ceems-api-server
+    - ceems-lb
+    - prometheus
+    - grafana
+    - exporter
+    - ceems
+    - monitoring
+    - gpu
+    - nvidia
+    - amd
+    - energy
+    - emissions
+    - performance
+    - io
+    - network
+    - ebpf
+    maintainers:
+    - email: mahendra.paipuri@gmail.com
+      name: mahendrapaipuri
+      url: https://github.com/mahendrapaipuri
+    name: kube-ceems
+    sources:
+    - https://github.com/ceems-dev/helm-charts
+    type: application
+    urls:
+    - https://github.com/ceems-dev/helm-charts/releases/download/kube-ceems-1.24.0/kube-ceems-1.24.0.tgz
+    version: 1.24.0
+  - annotations:
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Chart Source
+          url: https://github.com/ceems-dev/helm-charts
+        - name: Upstream Project
+          url: https://github.com/ceems-dev/ceems
+    apiVersion: v2
+    appVersion: 0.14.4
     created: "2026-07-22T01:10:28.303502613Z"
     dependencies:
     - condition: ceemsExporter.enabled
@@ -8400,4 +8464,4 @@ entries:
     urls:
     - https://github.com/ceems-dev/helm-charts/releases/download/kube-ceems-0.1.1/kube-ceems-0.1.1.tgz
     version: 0.1.1
-generated: "2026-07-22T01:10:28.303832985Z"
+generated: "2026-07-23T02:55:50.110435612Z"
