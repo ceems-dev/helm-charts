@@ -4,7 +4,7 @@
 
 # Git ref of ceems repo
 # renovate: git-refs=https://github.com/ceems-dev/ceems branch=main
-REF=10be84119534bcffd1966685c536df02d5890238
+REF=bb5f4d832e9e71f82f6ff79cb1f5fdf7bc9eb58e
 
 # Get script directory
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
