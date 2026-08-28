@@ -2,7 +2,7 @@
 
 # kube-ceems
 
-![Version: 1.31.3](https://img.shields.io/badge/Version-1.31.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.15.1](https://img.shields.io/badge/AppVersion-0.15.1-informational?style=flat-square)
+![Version: 1.31.4](https://img.shields.io/badge/Version-1.31.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.15.1](https://img.shields.io/badge/AppVersion-0.15.1-informational?style=flat-square)
 
 A Helm chart for deploying CEEMS
 
@@ -22,11 +22,11 @@ A Helm chart for deploying CEEMS
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://ceems-dev.github.io/helm-charts | ceems-api-server | 0.8.3 |
+| https://ceems-dev.github.io/helm-charts | ceems-api-server | 0.8.4 |
 | https://ceems-dev.github.io/helm-charts | ceems-exporter | 0.7.1 |
 | https://ceems-dev.github.io/helm-charts | ceems-lb | 0.7.1 |
 | https://grafana.github.io/helm-charts | pyroscope | 2.2.1 |
-| https://prometheus-community.github.io/helm-charts | kube-prometheus-stack | 88.5.* |
+| https://prometheus-community.github.io/helm-charts | kube-prometheus-stack | 88.6.* |
 
 <!-- textlint-enable -->
 
