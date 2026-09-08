@@ -21,7 +21,7 @@ keywords:
   - network
   - ebpf
 type: application
-version: 1.31.4
+version: 1.32.0
 # renovate: github=ceems-dev/ceems
 appVersion: 0.15.1
 home: https://ceems-dev.github.io/helm-charts/
