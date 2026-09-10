@@ -21,9 +21,9 @@ keywords:
   - network
   - ebpf
 type: application
-version: 1.34.0
+version: 1.36.0
 # renovate: github=ceems-dev/ceems
-appVersion: 0.15.1
+appVersion: 0.16.0
 home: https://ceems-dev.github.io/helm-charts/
 sources:
   - https://github.com/ceems-dev/helm-charts
@@ -40,15 +40,15 @@ annotations:
       url: https://github.com/ceems-dev/ceems
 dependencies:
   - name: ceems-exporter
-    version: "0.7.1"
+    version: "0.8.0"
     repository: https://ceems-dev.github.io/helm-charts
     condition: ceemsExporter.enabled
   - name: ceems-api-server
-    version: "0.8.4"
+    version: "0.9.0"
     repository: https://ceems-dev.github.io/helm-charts
     condition: ceemsAPIServer.enabled
   - name: ceems-lb
-    version: "0.7.1"
+    version: "0.8.0"
     repository: https://ceems-dev.github.io/helm-charts
     condition: ceemsLB.enabled
   - name: kube-prometheus-stack
