@@ -14,7 +14,7 @@ keywords:
   - energy
   - emissions
 type: application
-version: 0.8.1
+version: 0.9.0
 # renovate: github=ceems-dev/ceems
 appVersion: 0.16.1
 home: https://ceems-dev.github.io/helm-charts/
