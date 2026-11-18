@@ -1,0 +1,5 @@
+# Workaround until https://github.com/rhysd/actionlint/issues/682 is fixed
+# upstream
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04
